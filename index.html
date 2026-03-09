@@ -330,7 +330,14 @@
 
     <div class="tab-panel active" id="tab-setup">
       <div class="card">
+        <div class="card-head"><h2 class="card-title">How to Use This Tool</h2></div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">
+          Complete the tabs from left to right. Start with <strong>Setup</strong>, then add your <strong>Sales</strong>, <strong>Salaries</strong>, <strong>Expenses</strong>, and <strong>Startup Costs</strong>. The tool will generate default financial projections automatically. In the <strong>Outputs</strong> tab, you can edit month or year values before exporting the final version to Excel or CSV for Google Sheets.
+        </div>
+      </div>
+      <div class="card">
         <div class="card-head"><h2 class="card-title">Plan Setup</h2></div>
+        <div class="sub" style="margin-bottom:14px;">Set the overall projection type, start month, tax rate, opening cash, and funding assumptions. These values drive the full model.</div>
         <div class="grid grid-4">
           <div class="field"><label>Business Name</label><input id="businessName" type="text" /></div>
           <div class="field"><label>Projection Type</label><select id="projectionMode"><option value="12">12-Month Projection</option><option value="60">5-Year Projection</option></select></div>
@@ -353,6 +360,10 @@
 
     <div class="tab-panel" id="tab-sales">
       <div class="card">
+        <div class="card-head"><h2 class="card-title">How Sales Inputs Work</h2></div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Add each product or service line separately. Enter the selling price, estimated units sold per month, and cost per unit. The tool uses this to calculate revenue, cost of sales, and gross profit.</div>
+      </div>
+      <div class="card">
         <div class="card-head">
           <h2 class="card-title">Sales Forecast Inputs</h2>
           <button class="small" id="addProductBtn">Add Product / Service</button>
@@ -362,6 +373,10 @@
     </div>
 
     <div class="tab-panel" id="tab-salaries">
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">How Salary Inputs Work</h2></div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Add each staff role with the number of people, monthly salary, and any pre-sales months paid before trading starts. These values feed salaries and startup costs.</div>
+      </div>
       <div class="card">
         <div class="card-head">
           <h2 class="card-title">Salaries and Wages</h2>
@@ -373,6 +388,10 @@
 
     <div class="tab-panel" id="tab-expenses">
       <div class="card">
+        <div class="card-head"><h2 class="card-title">How Expense Inputs Work</h2></div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Add each monthly operating expense and include an annual increase where needed. These values are used in the expense budget, cash flow, and income statement.</div>
+      </div>
+      <div class="card">
         <div class="card-head">
           <h2 class="card-title">Operating Expenses</h2>
           <button class="small" id="addExpenseBtn">Add Expense</button>
@@ -382,6 +401,10 @@
     </div>
 
     <div class="tab-panel" id="tab-startup">
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">How Startup Costs Work</h2></div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Capture one-off startup costs such as equipment, setup, deposits, and launch costs. The tool compares these costs against owner contribution and loan funding.</div>
+      </div>
       <div class="grid grid-2">
         <div class="card">
           <div class="card-head">
@@ -403,6 +426,10 @@
     </div>
 
     <div class="tab-panel" id="tab-outputs">
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">How Outputs Work</h2></div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Review the generated projections here. The editable forecast tables let you change values for specific months or years before exporting the final statements.</div>
+      </div>
       <div class="metric-grid">
         <div class="metric"><div class="m-label">Total Revenue</div><div class="m-value" id="metricRevenue">R 0</div></div>
         <div class="metric"><div class="m-label">Net Profit After Tax</div><div class="m-value" id="metricProfit">R 0</div></div>
@@ -745,11 +772,11 @@
       const wrap = document.getElementById('productsContainer');
       wrap.innerHTML = state.products.map((p, i) => `
         <div class="line-row products">
-          <input type="text" placeholder="Product / Service" value="${escapeHtml(p.name)}" onchange="updateProduct(${i}, 'name', this.value)">
-          <input type="number" placeholder="Selling Price" value="${p.price}" onchange="updateProduct(${i}, 'price', this.value)">
-          <input type="number" placeholder="Units per Month" value="${p.unitsPerMonth}" onchange="updateProduct(${i}, 'unitsPerMonth', this.value)">
-          <input type="number" placeholder="Cost per Unit" value="${p.costPerUnit}" onchange="updateProduct(${i}, 'costPerUnit', this.value)">
-          <button onclick="removeProduct(${i})">Remove</button>
+          <div class="field"><label>Product / Service</label><input type="text" placeholder="Product / Service" value="${escapeHtml(p.name)}" onchange="updateProduct(${i}, 'name', this.value)">
+          </div><div class="field"><label>Selling Price (R)</label><input type="number" placeholder="Selling Price" value="${p.price}" onchange="updateProduct(${i}, 'price', this.value)">
+          </div><div class="field"><label>Units per Month</label><input type="number" placeholder="Units per Month" value="${p.unitsPerMonth}" onchange="updateProduct(${i}, 'unitsPerMonth', this.value)">
+          </div><div class="field"><label>Cost per Unit (R)</label><input type="number" placeholder="Cost per Unit" value="${p.costPerUnit}" onchange="updateProduct(${i}, 'costPerUnit', this.value)">
+          </div><div class="field"><label>Action</label><button onclick="removeProduct(${i})">Remove</button></div>
         </div>
       `).join('');
     }
@@ -758,11 +785,11 @@
       const wrap = document.getElementById('salariesContainer');
       wrap.innerHTML = state.salaries.map((s, i) => `
         <div class="line-row salaries">
-          <input type="text" placeholder="Role" value="${escapeHtml(s.role)}" onchange="updateSalary(${i}, 'role', this.value)">
-          <input type="number" placeholder="No. of People" value="${s.people}" onchange="updateSalary(${i}, 'people', this.value)">
-          <input type="number" placeholder="Monthly Salary" value="${s.monthlySalary}" onchange="updateSalary(${i}, 'monthlySalary', this.value)">
-          <input type="number" placeholder="Pre-Sales Months" value="${s.presalesMonths}" onchange="updateSalary(${i}, 'presalesMonths', this.value)">
-          <button onclick="removeSalary(${i})">Remove</button>
+          <div class="field"><label>Role</label><input type="text" placeholder="Role" value="${escapeHtml(s.role)}" onchange="updateSalary(${i}, 'role', this.value)">
+          </div><div class="field"><label>No. of People</label><input type="number" placeholder="No. of People" value="${s.people}" onchange="updateSalary(${i}, 'people', this.value)">
+          </div><div class="field"><label>Monthly Salary (R)</label><input type="number" placeholder="Monthly Salary" value="${s.monthlySalary}" onchange="updateSalary(${i}, 'monthlySalary', this.value)">
+          </div><div class="field"><label>Pre-Sales Months</label><input type="number" placeholder="Pre-Sales Months" value="${s.presalesMonths}" onchange="updateSalary(${i}, 'presalesMonths', this.value)">
+          </div><div class="field"><label>Action</label><button onclick="removeSalary(${i})">Remove</button></div>
         </div>
       `).join('');
     }
@@ -771,10 +798,10 @@
       const wrap = document.getElementById('expensesContainer');
       wrap.innerHTML = state.expenses.map((e, i) => `
         <div class="line-row expenses">
-          <input type="text" placeholder="Expense" value="${escapeHtml(e.name)}" onchange="updateExpense(${i}, 'name', this.value)">
-          <input type="number" placeholder="Monthly Amount" value="${e.monthlyAmount}" onchange="updateExpense(${i}, 'monthlyAmount', this.value)">
-          <input type="number" placeholder="Annual Increase %" value="${e.annualIncrease}" onchange="updateExpense(${i}, 'annualIncrease', this.value)">
-          <button onclick="removeExpense(${i})">Remove</button>
+          <div class="field"><label>Expense Name</label><input type="text" placeholder="Expense" value="${escapeHtml(e.name)}" onchange="updateExpense(${i}, 'name', this.value)">
+          </div><div class="field"><label>Monthly Amount (R)</label><input type="number" placeholder="Monthly Amount" value="${e.monthlyAmount}" onchange="updateExpense(${i}, 'monthlyAmount', this.value)">
+          </div><div class="field"><label>Annual Increase (%)</label><input type="number" placeholder="Annual Increase %" value="${e.annualIncrease}" onchange="updateExpense(${i}, 'annualIncrease', this.value)">
+          </div><div class="field"><label>Action</label><button onclick="removeExpense(${i})">Remove</button></div>
         </div>
       `).join('');
     }
@@ -783,9 +810,9 @@
       const wrap = document.getElementById('startupContainer');
       wrap.innerHTML = state.startupCosts.map((c, i) => `
         <div class="line-row startup">
-          <input type="text" placeholder="Description" value="${escapeHtml(c.name)}" onchange="updateStartup(${i}, 'name', this.value)">
-          <input type="number" placeholder="Amount" value="${c.amount}" onchange="updateStartup(${i}, 'amount', this.value)">
-          <button onclick="removeStartup(${i})">Remove</button>
+          <div class="field"><label>Description</label><input type="text" placeholder="Description" value="${escapeHtml(c.name)}" onchange="updateStartup(${i}, 'name', this.value)">
+          </div><div class="field"><label>Amount (R)</label><input type="number" placeholder="Amount" value="${c.amount}" onchange="updateStartup(${i}, 'amount', this.value)">
+          </div><div class="field"><label>Action</label><button onclick="removeStartup(${i})">Remove</button></div>
         </div>
       `).join('');
     }
