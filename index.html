@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>South African Financial Projection Tool</title>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     :root {
       --bg: #f8fafc;
@@ -20,9 +19,8 @@
       --warn-border: #fdba74;
       --warn-text: #9a3412;
       --success: #166534;
-      --header: #e2e8f0;
-      --highlight: #f8fafc;
     }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -31,7 +29,7 @@
       color: var(--text);
     }
     .container {
-      max-width: 1480px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 24px;
     }
@@ -53,7 +51,7 @@
       font-size: 14px;
       line-height: 1.6;
     }
-    .actions, .actions-secondary {
+    .actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -115,7 +113,6 @@
       border-radius: 16px;
       padding: 18px;
       margin-bottom: 16px;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
     .card-head {
       display: flex;
@@ -180,7 +177,7 @@
     .line-row {
       display: grid;
       gap: 10px;
-      align-items: end;
+      align-items: center;
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 12px;
@@ -201,7 +198,6 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 16px;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
     .metric .m-label {
       color: var(--muted);
@@ -213,24 +209,6 @@
       margin-top: 10px;
       font-size: 28px;
       font-weight: 700;
-    }
-    .chart-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-    .chart-card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      min-height: 360px;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    }
-    .chart-card canvas {
-      width: 100% !important;
-      height: 280px !important;
     }
     .table-wrap {
       overflow: auto;
@@ -268,12 +246,6 @@
       background: white;
       font-weight: 600;
     }
-    .statement-highlight td {
-      background: var(--highlight);
-      font-weight: 700;
-    }
-    .statement-positive { color: var(--success); font-weight: 700; }
-    .statement-negative { color: var(--danger); font-weight: 700; }
     .edit-cell {
       width: 110px;
       padding: 8px 10px;
@@ -322,11 +294,11 @@
     .success { color: var(--success); }
 
     @media (max-width: 1100px) {
-      .grid-4, .metric-grid, .chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-4, .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .line-row.products, .line-row.salaries, .line-row.expenses, .line-row.startup { grid-template-columns: 1fr; }
     }
     @media (max-width: 700px) {
-      .grid-4, .grid-2, .metric-grid, .chart-grid { grid-template-columns: 1fr; }
+      .grid-4, .grid-2, .metric-grid { grid-template-columns: 1fr; }
       .container { padding: 16px; }
     }
   </style>
@@ -336,18 +308,11 @@
     <div class="topbar">
       <div>
         <h1>South African Financial Projection Tool</h1>
-        <div class="sub">Clean business-plan projections with editable outputs, project save/import support, charts, and export-ready statements.</div>
+        <div class="sub">Clean business-plan projections with editable outputs and export-ready statements.</div>
       </div>
-      <div>
-        <div class="actions">
-          <button id="exportProjectBtn">Export Project File</button>
-          <button id="importProjectBtn">Import Project File</button>
-          <input id="importProjectInput" type="file" accept="application/json,.json" style="display:none;">
-        </div>
-        <div class="actions-secondary" style="margin-top:10px;">
-          <button id="exportCsvBtn">Export CSV for Google Sheets</button>
-          <button class="primary" id="exportExcelBtn">Export Excel</button>
-        </div>
+      <div class="actions">
+        <button id="exportCsvBtn">Export CSV for Google Sheets</button>
+        <button class="primary" id="exportExcelBtn">Export Excel</button>
       </div>
     </div>
 
@@ -367,8 +332,8 @@
     <div class="tab-panel active" id="tab-setup">
       <div class="card">
         <div class="card-head"><h2 class="card-title">How to Use This Tool</h2></div>
-        <div class="sub">
-          Complete the tabs from left to right. Start with <strong>Setup</strong>, then add your <strong>Sales</strong>, <strong>Salaries</strong>, <strong>Expenses</strong>, and <strong>Startup Costs</strong>. The tool generates default financial projections automatically. In <strong>Outputs</strong>, you can edit month or year values before exporting. Use <strong>Export Project File</strong> to save the full submission and <strong>Import Project File</strong> to load and continue later.
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">
+          Complete the tabs from left to right. Start with <strong>Setup</strong>, then add your <strong>Sales</strong>, <strong>Salaries</strong>, <strong>Expenses</strong>, and <strong>Startup Costs</strong>. The tool will generate default financial projections automatically. In the <strong>Outputs</strong> tab, you can edit month or year values before exporting the final version to Excel or CSV for Google Sheets.
         </div>
       </div>
       <div class="card">
@@ -397,7 +362,7 @@
     <div class="tab-panel" id="tab-sales">
       <div class="card">
         <div class="card-head"><h2 class="card-title">How Sales Inputs Work</h2></div>
-        <div class="sub">Add each product or service line separately. Enter the selling price, estimated units sold per month, and cost per unit. The tool uses this to calculate revenue, cost of sales, and gross profit.</div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Add each product or service line separately. Enter the selling price, estimated units sold per month, and cost per unit. The tool uses this to calculate revenue, cost of sales, and gross profit.</div>
       </div>
       <div class="card">
         <div class="card-head">
@@ -411,7 +376,7 @@
     <div class="tab-panel" id="tab-salaries">
       <div class="card">
         <div class="card-head"><h2 class="card-title">How Salary Inputs Work</h2></div>
-        <div class="sub">Add each staff role with the number of people, monthly salary, and any pre-sales months paid before trading starts. These values feed salaries and startup costs.</div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Add each staff role with the number of people, monthly salary, and any pre-sales months paid before trading starts. These values feed salaries and startup costs.</div>
       </div>
       <div class="card">
         <div class="card-head">
@@ -425,7 +390,7 @@
     <div class="tab-panel" id="tab-expenses">
       <div class="card">
         <div class="card-head"><h2 class="card-title">How Expense Inputs Work</h2></div>
-        <div class="sub">Add each monthly operating expense and include an annual increase where needed. These values are used in the expense budget, cash flow, and income statement.</div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Add each monthly operating expense and include an annual increase where needed. These values are used in the expense budget, cash flow, and income statement.</div>
       </div>
       <div class="card">
         <div class="card-head">
@@ -439,7 +404,7 @@
     <div class="tab-panel" id="tab-startup">
       <div class="card">
         <div class="card-head"><h2 class="card-title">How Startup Costs Work</h2></div>
-        <div class="sub">Capture one-off startup costs such as equipment, setup, deposits, and launch costs. The tool compares these costs against owner contribution and loan funding.</div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Capture one-off startup costs such as equipment, setup, deposits, and launch costs. The tool compares these costs against owner contribution and loan funding.</div>
       </div>
       <div class="grid grid-2">
         <div class="card">
@@ -464,32 +429,13 @@
     <div class="tab-panel" id="tab-outputs">
       <div class="card">
         <div class="card-head"><h2 class="card-title">How Outputs Work</h2></div>
-        <div class="sub">Review the generated projections here. The editable forecast tables let you change values for specific months or years before exporting the final statements.</div>
+        <div class="sub" style="font-size:14px; line-height:1.7; color: var(--muted);">Review the generated projections here. The editable forecast tables let you change values for specific months or years before exporting the final statements.</div>
       </div>
       <div class="metric-grid">
         <div class="metric"><div class="m-label">Total Revenue</div><div class="m-value" id="metricRevenue">R 0</div></div>
         <div class="metric"><div class="m-label">Net Profit After Tax</div><div class="m-value" id="metricProfit">R 0</div></div>
         <div class="metric"><div class="m-label">Closing Cash</div><div class="m-value" id="metricCash">R 0</div></div>
         <div class="metric"><div class="m-label">Break-Even Sales</div><div class="m-value" id="metricBreakEven">R 0</div></div>
-      </div>
-
-      <div class="chart-grid">
-        <div class="chart-card">
-          <div class="card-head"><h2 class="card-title">Revenue vs Net Profit</h2></div>
-          <canvas id="revenueProfitChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="card-head"><h2 class="card-title">Closing Cash Balance</h2></div>
-          <canvas id="cashChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="card-head"><h2 class="card-title">Expense Breakdown</h2></div>
-          <canvas id="expenseChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="card-head"><h2 class="card-title">Sales vs Break-Even</h2></div>
-          <canvas id="breakEvenChart"></canvas>
-        </div>
       </div>
 
       <div class="card">
@@ -534,8 +480,6 @@
       "Telephone and Internet", "Travel and Accommodation", "Web Hosting"
     ];
 
-    const charts = {};
-
     const state = {
       setup: {
         businessName: "New Business",
@@ -570,7 +514,6 @@
     function n(v) { const x = Number(v); return Number.isFinite(x) ? x : 0; }
     function rand(value) { return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(n(value)); }
     function pct(value) { return `${(n(value) * 100).toFixed(1)}%`; }
-    function sum(arr) { return arr.reduce((a, b) => a + n(b), 0); }
 
     function buildPeriods(startMonth, mode) {
       const periods = [];
@@ -602,71 +545,34 @@
       const periods = buildPeriods(n(state.setup.startMonth), state.setup.projectionMode);
       const loanPayment = computeLoanPayment(state.setup.loanAmount, state.setup.annualInterestRate, state.setup.loanTermMonths);
 
-      const revenueRows = state.products.map(p => ({
-        key: `rev_${p.id}`,
-        name: p.name,
-        values: schedule(n(p.price) * n(p.unitsPerMonth), state.setup.salesGrowthAnnual, periods)
-      }));
-
-      const cosRows = state.products.map(p => ({
-        key: `cos_${p.id}`,
-        name: p.name,
-        values: schedule(n(p.costPerUnit) * n(p.unitsPerMonth), state.setup.salesGrowthAnnual, periods)
-      }));
-
-      const salaryRows = state.salaries.map(s => ({
-        key: `sal_${s.id}`,
-        name: s.role,
-        values: periods.map(p => p.type === 'month' ? n(s.people) * n(s.monthlySalary) : n(s.people) * n(s.monthlySalary) * 12)
-      }));
-
+      const revenueRows = state.products.map(p => ({ key: `rev_${p.id}`, name: p.name, values: schedule(n(p.price) * n(p.unitsPerMonth), state.setup.salesGrowthAnnual, periods) }));
+      const cosRows = state.products.map(p => ({ key: `cos_${p.id}`, name: p.name, values: schedule(n(p.costPerUnit) * n(p.unitsPerMonth), state.setup.salesGrowthAnnual, periods) }));
+      const salaryRows = state.salaries.map(s => ({ key: `sal_${s.id}`, name: s.role, values: periods.map(p => p.type === 'month' ? n(s.people) * n(s.monthlySalary) : n(s.people) * n(s.monthlySalary) * 12) }));
       const expenseRows = state.expenses.map(e => {
         const growth = n(e.annualIncrease) / 100;
-        return {
-          key: `exp_${e.id}`,
-          name: e.name,
-          values: periods.map(p => p.type === 'month' ? n(e.monthlyAmount) : n(e.monthlyAmount) * 12 * Math.pow(1 + growth, p.yearIndex - 1))
-        };
+        return { key: `exp_${e.id}`, name: e.name, values: periods.map(p => p.type === 'month' ? n(e.monthlyAmount) : n(e.monthlyAmount) * 12 * Math.pow(1 + growth, p.yearIndex - 1)) };
       });
+      const otherIncomeRow = { key: 'other_income', name: 'Other Income', values: periods.map(p => p.type === 'month' ? n(state.setup.otherIncomeMonthly) : n(state.setup.otherIncomeMonthly) * 12) };
 
-      const otherIncomeRow = {
-        key: 'other_income',
-        name: 'Other Income',
-        values: periods.map(p => p.type === 'month' ? n(state.setup.otherIncomeMonthly) : n(state.setup.otherIncomeMonthly) * 12)
-      };
-
-      const startupTotal = state.startupCosts.reduce((sum, c) => sum + n(c.amount), 0) +
-        state.salaries.reduce((sum, s) => sum + n(s.people) * n(s.monthlySalary) * n(s.presalesMonths), 0);
-
-      const totalRevenue = periods.map((p, idx) => {
-        const rowTotal = revenueRows.reduce((sum, row) => sum + getOverride(row.key, p.key, row.values[idx]), 0);
-        return rowTotal + getOverride(otherIncomeRow.key, p.key, otherIncomeRow.values[idx]);
-      });
-
+      const startupTotal = state.startupCosts.reduce((sum, c) => sum + n(c.amount), 0) + state.salaries.reduce((sum, s) => sum + n(s.people) * n(s.monthlySalary) * n(s.presalesMonths), 0);
+      const totalRevenue = periods.map((p, idx) => revenueRows.reduce((sum, row) => sum + getOverride(row.key, p.key, row.values[idx]), 0) + getOverride(otherIncomeRow.key, p.key, otherIncomeRow.values[idx]));
       const totalCOS = periods.map((p, idx) => cosRows.reduce((sum, row) => sum + getOverride(row.key, p.key, row.values[idx]), 0));
       const grossProfit = periods.map((_, idx) => totalRevenue[idx] - totalCOS[idx]);
       const totalSalaries = periods.map((p, idx) => salaryRows.reduce((sum, row) => sum + getOverride(row.key, p.key, row.values[idx]), 0));
       const totalExpenses = periods.map((p, idx) => expenseRows.reduce((sum, row) => sum + getOverride(row.key, p.key, row.values[idx]), 0));
-
-      const financeCosts = periods.map((p, idx) => {
-        if (p.type === 'month') return idx < n(state.setup.loanTermMonths) ? loanPayment : 0;
-        const remainingMonthsAtStart = Math.max(0, n(state.setup.loanTermMonths) - 12 - ((p.yearIndex - 2) * 12));
-        return Math.min(12, remainingMonthsAtStart) * loanPayment;
-      });
-
+      const financeCosts = periods.map((p, idx) => p.type === 'month' ? (idx < n(state.setup.loanTermMonths) ? loanPayment : 0) : Math.min(12, Math.max(0, n(state.setup.loanTermMonths) - 12 - ((p.yearIndex - 2) * 12))) * loanPayment);
       const operatingProfit = periods.map((_, idx) => grossProfit[idx] - totalSalaries[idx] - totalExpenses[idx]);
       const netProfitBeforeTax = periods.map((_, idx) => operatingProfit[idx] - financeCosts[idx]);
       const incomeTax = periods.map((_, idx) => netProfitBeforeTax[idx] > 0 ? netProfitBeforeTax[idx] * (n(state.setup.taxRate) / 100) : 0);
       const netProfitAfterTax = periods.map((_, idx) => netProfitBeforeTax[idx] - incomeTax[idx]);
 
       const cashBalances = [];
-      const initialCash = n(state.setup.openingCash) + n(state.setup.ownerContribution) + n(state.setup.loanAmount) - startupTotal;
+      let initialCash = n(state.setup.openingCash) + n(state.setup.ownerContribution) + n(state.setup.loanAmount) - startupTotal;
       periods.forEach((p, idx) => {
         const opening = idx === 0 ? initialCash : cashBalances[idx - 1].closing;
         const inflow = totalRevenue[idx];
         const outflow = totalCOS[idx] + totalSalaries[idx] + totalExpenses[idx] + financeCosts[idx];
-        const closing = opening + inflow - outflow;
-        cashBalances.push({ opening, inflow, outflow, closing, period: p });
+        cashBalances.push({ opening, inflow, outflow, closing: opening + inflow - outflow, period: p });
       });
 
       const balanceSheet = periods.map((p, idx) => {
@@ -675,164 +581,70 @@
         const loanPaid = p.type === 'month' ? loanPayment * (idx + 1) : loanPayment * (12 + ((p.yearIndex - 2) * 12));
         const loanPayable = Math.max(0, n(state.setup.loanAmount) - loanPaid);
         const retainedEarnings = netProfitAfterTax.slice(0, idx + 1).reduce((a, b) => a + b, 0);
-        const equity = n(state.setup.ownerContribution) + retainedEarnings;
-        return { cash, totalAssets, loanPayable, equity };
+        return { cash, totalAssets, loanPayable, equity: n(state.setup.ownerContribution) + retainedEarnings };
       });
 
       const fixedCosts = (totalSalaries[0] || 0) + (totalExpenses[0] || 0);
       const grossMarginPercent = totalRevenue[0] > 0 ? grossProfit[0] / totalRevenue[0] : 0;
       const breakEvenSales = grossMarginPercent > 0 ? fixedCosts / grossMarginPercent : 0;
 
-      return {
-        periods, loanPayment, revenueRows, cosRows, salaryRows, expenseRows, otherIncomeRow,
-        totalRevenue, totalCOS, grossProfit, totalSalaries, totalExpenses, operatingProfit,
-        financeCosts, netProfitBeforeTax, incomeTax, netProfitAfterTax, startupTotal,
-        cashBalances, balanceSheet, grossMarginPercent, breakEvenSales,
-      };
+      return { periods, loanPayment, revenueRows, cosRows, salaryRows, expenseRows, otherIncomeRow, totalRevenue, totalCOS, grossProfit, totalSalaries, totalExpenses, operatingProfit, financeCosts, netProfitBeforeTax, incomeTax, netProfitAfterTax, startupTotal, cashBalances, balanceSheet, grossMarginPercent, breakEvenSales };
     }
 
     function render() {
-      renderSetup();
-      renderProducts();
-      renderSalaries();
-      renderExpenses();
-      renderStartupCosts();
-
+      renderSetup(); renderProducts(); renderSalaries(); renderExpenses(); renderStartupCosts();
       const p = computeProjection();
-
       document.getElementById('loanRepaymentValue').textContent = rand(p.loanPayment);
       document.getElementById('fundingStartupTotal').textContent = rand(p.startupTotal);
       document.getElementById('fundingOwner').textContent = rand(state.setup.ownerContribution);
       document.getElementById('fundingLoan').textContent = rand(state.setup.loanAmount);
       const gap = n(state.setup.ownerContribution) + n(state.setup.loanAmount) - p.startupTotal;
       const gapEl = document.getElementById('fundingGap');
-      gapEl.textContent = rand(gap);
-      gapEl.className = 'right ' + (gap >= 0 ? 'success' : 'danger');
-
-      document.getElementById('metricRevenue').textContent = rand(sum(p.totalRevenue));
-      document.getElementById('metricProfit').textContent = rand(sum(p.netProfitAfterTax));
+      gapEl.textContent = rand(gap); gapEl.className = 'right ' + (gap >= 0 ? 'success' : 'danger');
+      document.getElementById('metricRevenue').textContent = rand(p.totalRevenue.reduce((a, b) => a + n(b), 0));
+      document.getElementById('metricProfit').textContent = rand(p.netProfitAfterTax.reduce((a, b) => a + n(b), 0));
       document.getElementById('metricCash').textContent = rand(p.cashBalances[p.cashBalances.length - 1]?.closing || 0);
       document.getElementById('metricBreakEven').textContent = rand(p.breakEvenSales);
       document.getElementById('negativeCashWarning').style.display = p.cashBalances.some(x => x.closing < 0) ? 'block' : 'none';
-
       renderEditableSections(p);
-      renderCharts(p);
-
       renderStatement('incomeStatementTable', p.periods, [
-        { name: 'Sales Revenue', values: p.totalRevenue },
-        { name: 'Cost of Sales', values: p.totalCOS },
-        { name: 'Gross Profit', values: p.grossProfit },
-        { name: 'Salaries and Wages', values: p.totalSalaries },
-        { name: 'Operating Expenses', values: p.totalExpenses },
-        { name: 'Operating Profit', values: p.operatingProfit },
-        { name: 'Finance Costs', values: p.financeCosts },
-        { name: 'Net Profit Before Tax', values: p.netProfitBeforeTax },
-        { name: 'Income Tax', values: p.incomeTax },
-        { name: 'Net Profit After Tax', values: p.netProfitAfterTax },
+        { name: 'Sales Revenue', values: p.totalRevenue }, { name: 'Cost of Sales', values: p.totalCOS }, { name: 'Gross Profit', values: p.grossProfit }, { name: 'Salaries and Wages', values: p.totalSalaries }, { name: 'Operating Expenses', values: p.totalExpenses }, { name: 'Operating Profit', values: p.operatingProfit }, { name: 'Finance Costs', values: p.financeCosts }, { name: 'Net Profit Before Tax', values: p.netProfitBeforeTax }, { name: 'Income Tax', values: p.incomeTax }, { name: 'Net Profit After Tax', values: p.netProfitAfterTax }
       ]);
-
       renderStatement('cashFlowTable', p.periods, [
-        { name: 'Opening Cash Balance', values: p.cashBalances.map(x => x.opening) },
-        { name: 'Cash Inflows', values: p.cashBalances.map(x => x.inflow) },
-        { name: 'Cash Outflows', values: p.cashBalances.map(x => x.outflow) },
-        { name: 'Closing Cash Balance', values: p.cashBalances.map(x => x.closing) },
+        { name: 'Opening Cash Balance', values: p.cashBalances.map(x => x.opening) }, { name: 'Cash Inflows', values: p.cashBalances.map(x => x.inflow) }, { name: 'Cash Outflows', values: p.cashBalances.map(x => x.outflow) }, { name: 'Closing Cash Balance', values: p.cashBalances.map(x => x.closing) }
       ]);
-
       renderStatement('balanceSheetTable', p.periods, [
-        { name: 'Cash', values: p.balanceSheet.map(x => x.cash) },
-        { name: 'Total Assets', values: p.balanceSheet.map(x => x.totalAssets) },
-        { name: 'Loan Payable', values: p.balanceSheet.map(x => x.loanPayable) },
-        { name: "Owner's Equity and Retained Earnings", values: p.balanceSheet.map(x => x.equity) },
+        { name: 'Cash', values: p.balanceSheet.map(x => x.cash) }, { name: 'Total Assets', values: p.balanceSheet.map(x => x.totalAssets) }, { name: 'Loan Payable', values: p.balanceSheet.map(x => x.loanPayable) }, { name: "Owner's Equity and Retained Earnings", values: p.balanceSheet.map(x => x.equity) }
       ]);
-
-      document.getElementById('breakEvenList').innerHTML = `
-        ${miniItem('Fixed Costs (first period)', rand((p.totalSalaries[0] || 0) + (p.totalExpenses[0] || 0)))}
-        ${miniItem('Gross Profit Margin', pct(p.grossMarginPercent))}
-        ${miniItem('Break-Even Sales', rand(p.breakEvenSales))}
-      `;
-
-      document.getElementById('startupFundingList').innerHTML = `
-        ${miniItem('Startup Cost Requirement', rand(p.startupTotal))}
-        ${miniItem('Owner Contribution', rand(state.setup.ownerContribution))}
-        ${miniItem('Loan Funding', rand(state.setup.loanAmount))}
-        ${miniItem('Calculated Monthly Loan Repayment', rand(p.loanPayment))}
-      `;
+      document.getElementById('breakEvenList').innerHTML = `<div class="mini-item"><div class="left">Fixed Costs (first period)</div><div class="right">${rand((p.totalSalaries[0] || 0) + (p.totalExpenses[0] || 0))}</div></div><div class="mini-item"><div class="left">Gross Profit Margin</div><div class="right">${pct(p.grossMarginPercent)}</div></div><div class="mini-item"><div class="left">Break-Even Sales</div><div class="right">${rand(p.breakEvenSales)}</div></div>`;
+      document.getElementById('startupFundingList').innerHTML = `<div class="mini-item"><div class="left">Startup Cost Requirement</div><div class="right">${rand(p.startupTotal)}</div></div><div class="mini-item"><div class="left">Owner Contribution</div><div class="right">${rand(state.setup.ownerContribution)}</div></div><div class="mini-item"><div class="left">Loan Funding</div><div class="right">${rand(state.setup.loanAmount)}</div></div><div class="mini-item"><div class="left">Calculated Monthly Loan Repayment</div><div class="right">${rand(p.loanPayment)}</div></div>`;
     }
-
-    function miniItem(left, right) { return `<div class="mini-item"><div class="left">${left}</div><div class="right">${right}</div></div>`; }
 
     function renderSetup() {
       const startMonth = document.getElementById('startMonth');
       if (!startMonth.options.length) startMonth.innerHTML = monthNames.map((m, i) => `<option value="${i}">${m}</option>`).join('');
-      setValue('businessName', state.setup.businessName);
-      setValue('projectionMode', state.setup.projectionMode);
-      setValue('startMonth', state.setup.startMonth);
-      setValue('openingCash', state.setup.openingCash);
-      setValue('ownerContribution', state.setup.ownerContribution);
-      setValue('loanAmount', state.setup.loanAmount);
-      setValue('loanTermMonths', state.setup.loanTermMonths);
-      setValue('annualInterestRate', state.setup.annualInterestRate);
-      setValue('taxRate', state.setup.taxRate);
-      setValue('otherIncomeMonthly', state.setup.otherIncomeMonthly);
-      setValue('salesGrowthAnnual', state.setup.salesGrowthAnnual);
+      ['businessName','projectionMode','startMonth','openingCash','ownerContribution','loanAmount','loanTermMonths','annualInterestRate','taxRate','otherIncomeMonthly','salesGrowthAnnual'].forEach(id => { const el = document.getElementById(id); if (el) el.value = state.setup[id]; });
     }
-
-    function setValue(id, value) { const el = document.getElementById(id); if (el) el.value = value; }
 
     function renderProducts() {
-      document.getElementById('productsContainer').innerHTML = state.products.map((p, i) => `
-        <div class="line-row products">
-          <div class="field"><label>Product / Service</label><input type="text" value="${escapeHtml(p.name)}" onchange="updateProduct(${i}, 'name', this.value)"></div>
-          <div class="field"><label>Selling Price (R)</label><input type="number" value="${p.price}" onchange="updateProduct(${i}, 'price', this.value)"></div>
-          <div class="field"><label>Units per Month</label><input type="number" value="${p.unitsPerMonth}" onchange="updateProduct(${i}, 'unitsPerMonth', this.value)"></div>
-          <div class="field"><label>Cost per Unit (R)</label><input type="number" value="${p.costPerUnit}" onchange="updateProduct(${i}, 'costPerUnit', this.value)"></div>
-          <div class="field"><label>Action</label><button onclick="removeProduct(${i})">Remove</button></div>
-        </div>`).join('');
+      document.getElementById('productsContainer').innerHTML = state.products.map((p, i) => `<div class="line-row products"><div class="field"><label>Product / Service</label><input type="text" value="${escapeHtml(p.name)}" onchange="updateProduct(${i}, 'name', this.value)"></div><div class="field"><label>Selling Price (R)</label><input type="number" value="${p.price}" onchange="updateProduct(${i}, 'price', this.value)"></div><div class="field"><label>Units per Month</label><input type="number" value="${p.unitsPerMonth}" onchange="updateProduct(${i}, 'unitsPerMonth', this.value)"></div><div class="field"><label>Cost per Unit (R)</label><input type="number" value="${p.costPerUnit}" onchange="updateProduct(${i}, 'costPerUnit', this.value)"></div><div class="field"><label>Action</label><button onclick="removeProduct(${i})">Remove</button></div></div>`).join('');
     }
-
     function renderSalaries() {
-      document.getElementById('salariesContainer').innerHTML = state.salaries.map((s, i) => `
-        <div class="line-row salaries">
-          <div class="field"><label>Role</label><input type="text" value="${escapeHtml(s.role)}" onchange="updateSalary(${i}, 'role', this.value)"></div>
-          <div class="field"><label>No. of People</label><input type="number" value="${s.people}" onchange="updateSalary(${i}, 'people', this.value)"></div>
-          <div class="field"><label>Monthly Salary (R)</label><input type="number" value="${s.monthlySalary}" onchange="updateSalary(${i}, 'monthlySalary', this.value)"></div>
-          <div class="field"><label>Pre-Sales Months</label><input type="number" value="${s.presalesMonths}" onchange="updateSalary(${i}, 'presalesMonths', this.value)"></div>
-          <div class="field"><label>Action</label><button onclick="removeSalary(${i})">Remove</button></div>
-        </div>`).join('');
+      document.getElementById('salariesContainer').innerHTML = state.salaries.map((s, i) => `<div class="line-row salaries"><div class="field"><label>Role</label><input type="text" value="${escapeHtml(s.role)}" onchange="updateSalary(${i}, 'role', this.value)"></div><div class="field"><label>No. of People</label><input type="number" value="${s.people}" onchange="updateSalary(${i}, 'people', this.value)"></div><div class="field"><label>Monthly Salary (R)</label><input type="number" value="${s.monthlySalary}" onchange="updateSalary(${i}, 'monthlySalary', this.value)"></div><div class="field"><label>Pre-Sales Months</label><input type="number" value="${s.presalesMonths}" onchange="updateSalary(${i}, 'presalesMonths', this.value)"></div><div class="field"><label>Action</label><button onclick="removeSalary(${i})">Remove</button></div></div>`).join('');
     }
-
     function renderExpenses() {
-      document.getElementById('expensesContainer').innerHTML = state.expenses.map((e, i) => `
-        <div class="line-row expenses">
-          <div class="field"><label>Expense Name</label><input type="text" value="${escapeHtml(e.name)}" onchange="updateExpense(${i}, 'name', this.value)"></div>
-          <div class="field"><label>Monthly Amount (R)</label><input type="number" value="${e.monthlyAmount}" onchange="updateExpense(${i}, 'monthlyAmount', this.value)"></div>
-          <div class="field"><label>Annual Increase (%)</label><input type="number" value="${e.annualIncrease}" onchange="updateExpense(${i}, 'annualIncrease', this.value)"></div>
-          <div class="field"><label>Action</label><button onclick="removeExpense(${i})">Remove</button></div>
-        </div>`).join('');
+      document.getElementById('expensesContainer').innerHTML = state.expenses.map((e, i) => `<div class="line-row expenses"><div class="field"><label>Expense Name</label><input type="text" value="${escapeHtml(e.name)}" onchange="updateExpense(${i}, 'name', this.value)"></div><div class="field"><label>Monthly Amount (R)</label><input type="number" value="${e.monthlyAmount}" onchange="updateExpense(${i}, 'monthlyAmount', this.value)"></div><div class="field"><label>Annual Increase (%)</label><input type="number" value="${e.annualIncrease}" onchange="updateExpense(${i}, 'annualIncrease', this.value)"></div><div class="field"><label>Action</label><button onclick="removeExpense(${i})">Remove</button></div></div>`).join('');
     }
-
     function renderStartupCosts() {
-      document.getElementById('startupContainer').innerHTML = state.startupCosts.map((c, i) => `
-        <div class="line-row startup">
-          <div class="field"><label>Description</label><input type="text" value="${escapeHtml(c.name)}" onchange="updateStartup(${i}, 'name', this.value)"></div>
-          <div class="field"><label>Amount (R)</label><input type="number" value="${c.amount}" onchange="updateStartup(${i}, 'amount', this.value)"></div>
-          <div class="field"><label>Action</label><button onclick="removeStartup(${i})">Remove</button></div>
-        </div>`).join('');
+      document.getElementById('startupContainer').innerHTML = state.startupCosts.map((c, i) => `<div class="line-row startup"><div class="field"><label>Description</label><input type="text" value="${escapeHtml(c.name)}" onchange="updateStartup(${i}, 'name', this.value)"></div><div class="field"><label>Amount (R)</label><input type="number" value="${c.amount}" onchange="updateStartup(${i}, 'amount', this.value)"></div><div class="field"><label>Action</label><button onclick="removeStartup(${i})">Remove</button></div></div>`).join('');
     }
 
-    function escapeHtml(str) {
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    }
+    function escapeHtml(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
 
     function renderEditableSections(p) {
       const container = document.getElementById('editableSections');
       container.innerHTML = '';
-      [
-        { title: 'Sales Forecast', rows: [...p.revenueRows, p.otherIncomeRow] },
-        { title: 'Cost of Sales', rows: p.cosRows },
-        { title: 'Salaries and Wages', rows: p.salaryRows },
-        { title: 'Operating Expenses', rows: p.expenseRows },
-      ].forEach(section => {
+      [{ title: 'Sales Forecast', rows: [...p.revenueRows, p.otherIncomeRow] }, { title: 'Cost of Sales', rows: p.cosRows }, { title: 'Salaries and Wages', rows: p.salaryRows }, { title: 'Operating Expenses', rows: p.expenseRows }].forEach(section => {
         const wrapper = document.createElement('div');
         wrapper.style.marginBottom = '20px';
         wrapper.innerHTML = `<div class="section-title"><h3>${section.title}</h3><span class="badge">Editable</span></div><div class="table-wrap">${buildEditableTable(section.rows, p.periods)}</div>`;
@@ -862,94 +674,23 @@
       periods.forEach(period => html += `<th>${period.label}</th>`);
       html += '</tr></thead><tbody>';
       rows.forEach(row => {
-        const isHighlight = /(Revenue|Gross Profit|Operating Profit|Net Profit|Closing Cash Balance|Total Assets|Loan Payable|Equity|Retained Earnings)/i.test(row.name);
-        html += `<tr class="${isHighlight ? 'statement-highlight' : ''}"><td>${escapeHtml(row.name)}</td>`;
-        row.values.forEach(v => {
-          const cls = n(v) < 0 ? 'statement-negative' : (/(Net Profit After Tax|Operating Profit|Gross Profit|Closing Cash Balance)/i.test(row.name) && n(v) > 0 ? 'statement-positive' : '');
-          html += `<td class="${cls}">${rand(v)}</td>`;
-        });
+        html += `<tr><td>${escapeHtml(row.name)}</td>`;
+        row.values.forEach(v => html += `<td>${rand(v)}</td>`);
         html += '</tr>';
       });
       html += '</tbody></table>';
       document.getElementById(targetId).innerHTML = html;
     }
 
-    function renderCharts(p) {
-      const labels = p.periods.map(x => x.label);
-      const totalRevenue = p.totalRevenue.map(x => Math.round(x));
-      const netProfit = p.netProfitAfterTax.map(x => Math.round(x));
-      const closingCash = p.cashBalances.map(x => Math.round(x.closing));
-      const expenseTotals = p.expenseRows.map(row => ({ name: row.name, value: row.values.reduce((a, b) => a + n(b), 0) }));
-      const topExpenses = expenseTotals.sort((a, b) => b.value - a.value).slice(0, 6);
-      const breakEvenLine = labels.map(() => Math.round(p.breakEvenSales));
-
-      makeChart('revenueProfitChart', 'bar', {
-        labels,
-        datasets: [
-          { label: 'Sales Revenue', data: totalRevenue, backgroundColor: 'rgba(15, 23, 42, 0.85)', borderRadius: 6 },
-          { label: 'Net Profit After Tax', data: netProfit, type: 'line', borderColor: 'rgba(22, 101, 52, 1)', backgroundColor: 'rgba(22, 101, 52, 0.15)', tension: 0.3, fill: false }
-        ]
-      });
-      makeChart('cashChart', 'line', {
-        labels,
-        datasets: [{ label: 'Closing Cash Balance', data: closingCash, borderColor: 'rgba(15, 23, 42, 1)', backgroundColor: 'rgba(15, 23, 42, 0.10)', fill: true, tension: 0.3 }]
-      });
-      makeChart('expenseChart', 'doughnut', {
-        labels: topExpenses.map(x => x.name),
-        datasets: [{ data: topExpenses.map(x => Math.round(x.value)), backgroundColor: ['#0f172a','#334155','#475569','#64748b','#94a3b8','#cbd5e1'] }]
-      });
-      makeChart('breakEvenChart', 'line', {
-        labels,
-        datasets: [
-          { label: 'Sales Revenue', data: totalRevenue, borderColor: 'rgba(15, 23, 42, 1)', backgroundColor: 'rgba(15, 23, 42, 0.10)', fill: false, tension: 0.3 },
-          { label: 'Break-Even Sales', data: breakEvenLine, borderColor: 'rgba(185, 28, 28, 1)', borderDash: [6,4], fill: false, tension: 0 }
-        ]
-      });
-    }
-
-    function makeChart(id, type, data) {
-      const ctx = document.getElementById(id);
-      if (!ctx || typeof Chart === 'undefined') return;
-      if (charts[id]) charts[id].destroy();
-      charts[id] = new Chart(ctx, {
-        type,
-        data,
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } },
-          scales: type === 'doughnut' ? {} : {
-            y: {
-              ticks: {
-                callback: (value) => new Intl.NumberFormat('en-ZA', { notation: 'compact', maximumFractionDigits: 1 }).format(value)
-              }
-            }
-          }
-        }
-      });
-    }
-
     function addListeners() {
-      document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-      }));
-
-      ['businessName','projectionMode','startMonth','openingCash','ownerContribution','loanAmount','loanTermMonths','annualInterestRate','taxRate','otherIncomeMonthly','salesGrowthAnnual']
-        .forEach(id => document.getElementById(id).addEventListener('input', (e) => { state.setup[id] = e.target.value; render(); }));
-
+      document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.tab').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active')); btn.classList.add('active'); document.getElementById('tab-' + btn.dataset.tab).classList.add('active'); }));
+      ['businessName','projectionMode','startMonth','openingCash','ownerContribution','loanAmount','loanTermMonths','annualInterestRate','taxRate','otherIncomeMonthly','salesGrowthAnnual'].forEach(id => document.getElementById(id).addEventListener('input', (e) => { state.setup[id] = e.target.value; render(); }));
       document.getElementById('addProductBtn').addEventListener('click', () => { state.products.push({ id: uid(), name: 'New Product / Service', price: 0, unitsPerMonth: 0, costPerUnit: 0 }); render(); });
       document.getElementById('addSalaryBtn').addEventListener('click', () => { state.salaries.push({ id: uid(), role: 'New Role', people: 1, monthlySalary: 0, presalesMonths: 0 }); render(); });
       document.getElementById('addExpenseBtn').addEventListener('click', () => { const nextName = saExpenseDefaults.find(name => !state.expenses.some(e => e.name === name)) || 'New Expense'; state.expenses.push({ id: uid(), name: nextName, monthlyAmount: 0, annualIncrease: 0 }); render(); });
       document.getElementById('addStartupBtn').addEventListener('click', () => { state.startupCosts.push({ id: uid(), name: 'New Startup Cost', amount: 0 }); render(); });
-
       document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
       document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
-      document.getElementById('exportProjectBtn').addEventListener('click', exportProjectFile);
-      document.getElementById('importProjectBtn').addEventListener('click', () => document.getElementById('importProjectInput').click());
-      document.getElementById('importProjectInput').addEventListener('change', importProjectFile);
     }
 
     function updateProduct(index, field, value) { state.products[index][field] = value; render(); }
@@ -961,79 +702,73 @@
     function updateStartup(index, field, value) { state.startupCosts[index][field] = value; render(); }
     function removeStartup(index) { state.startupCosts.splice(index, 1); render(); }
     function setOverride(rowKey, periodKey, value) { if (!state.overrides[rowKey]) state.overrides[rowKey] = {}; state.overrides[rowKey][periodKey] = value; render(); }
+    window.updateProduct = updateProduct; window.removeProduct = removeProduct; window.updateSalary = updateSalary; window.removeSalary = removeSalary; window.updateExpense = updateExpense; window.removeExpense = removeExpense; window.updateStartup = updateStartup; window.removeStartup = removeStartup; window.setOverride = setOverride;
 
-    window.updateProduct = updateProduct;
-    window.removeProduct = removeProduct;
-    window.updateSalary = updateSalary;
-    window.removeSalary = removeSalary;
-    window.updateExpense = updateExpense;
-    window.removeExpense = removeExpense;
-    window.updateStartup = updateStartup;
-    window.removeStartup = removeStartup;
-    window.setOverride = setOverride;
-
-    function exportProjectFile() {
-      const payload = {
-        version: 2,
-        exportedAt: new Date().toISOString(),
-        setup: state.setup,
-        products: state.products,
-        salaries: state.salaries,
-        expenses: state.expenses,
-        startupCosts: state.startupCosts,
-        overrides: state.overrides,
+    function applySheetStyles(ws, totalRows = [], percentRows = []) {
+      const headerFill = { patternType: 'solid', fgColor: { rgb: '0F172A' } };
+      const subHeaderFill = { patternType: 'solid', fgColor: { rgb: 'E2E8F0' } };
+      const totalFill = { patternType: 'solid', fgColor: { rgb: 'F8FAFC' } };
+      const border = {
+        top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        right: { style: 'thin', color: { rgb: 'CBD5E1' } }
       };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${String(state.setup.businessName || 'financial_projection_project').replace(/\s+/g, '_')}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-
-    function importProjectFile(event) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (!data || !data.setup) throw new Error('Invalid project file');
-          state.setup = data.setup || state.setup;
-          state.products = Array.isArray(data.products) ? data.products : state.products;
-          state.salaries = Array.isArray(data.salaries) ? data.salaries : state.salaries;
-          state.expenses = Array.isArray(data.expenses) ? data.expenses : state.expenses;
-          state.startupCosts = Array.isArray(data.startupCosts) ? data.startupCosts : state.startupCosts;
-          state.overrides = data.overrides || {};
-          render();
-          event.target.value = '';
-        } catch (err) {
-          alert('The selected file could not be imported. Please use a valid project JSON file.');
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      ws['!cols'] = Array.from({ length: range.e.c + 1 }, (_, idx) => ({ wch: idx === 0 ? 34 : 16 }));
+      for (let r = range.s.r; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const ref = XLSX.utils.encode_cell({ r, c });
+          if (!ws[ref]) continue;
+          ws[ref].s = ws[ref].s || {};
+          ws[ref].s.border = border;
+          ws[ref].s.alignment = { vertical: 'center', horizontal: c === 0 ? 'left' : 'right', wrapText: true };
+          ws[ref].s.font = { name: 'Arial', sz: 10, color: { rgb: '0F172A' } };
+          if (r === 0) {
+            ws[ref].s.fill = headerFill;
+            ws[ref].s.font = { name: 'Arial', bold: true, sz: 14, color: { rgb: 'FFFFFF' } };
+            ws[ref].s.alignment = { horizontal: 'left', vertical: 'center' };
+          } else if (r === 1) {
+            ws[ref].s.fill = subHeaderFill;
+            ws[ref].s.font = { name: 'Arial', bold: true, sz: 11, color: { rgb: '0F172A' } };
+            ws[ref].s.alignment = { horizontal: 'left', vertical: 'center' };
+          } else if (r === 2) {
+            ws[ref].s.fill = subHeaderFill;
+            ws[ref].s.font = { name: 'Arial', bold: true, sz: 10, color: { rgb: '0F172A' } };
+            ws[ref].s.alignment = { horizontal: c === 0 ? 'left' : 'center', vertical: 'center' };
+          }
+          if (c >= 1 && typeof ws[ref].v === 'number') ws[ref].z = percentRows.includes(r) ? '0.0%' : 'R #,##0';
         }
-      };
-      reader.readAsText(file);
+      }
+      totalRows.forEach((r) => {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const ref = XLSX.utils.encode_cell({ r, c });
+          if (!ws[ref]) continue;
+          ws[ref].s = ws[ref].s || {};
+          ws[ref].s.fill = totalFill;
+          ws[ref].s.font = { name: 'Arial', bold: true, sz: 10, color: { rgb: '0F172A' } };
+          ws[ref].s.border = border;
+        }
+      });
     }
 
     function exportExcel() {
       const p = computeProjection();
       const wb = XLSX.utils.book_new();
 
-      const cover = [
-        [state.setup.businessName || 'Financial Projections'],
-        ['South African Financial Projection Pack'],
-        [],
-        ['Projection Type', state.setup.projectionMode === '12' ? '12-Month Projection' : '5-Year Projection'],
-        ['Start Month', monthNames[n(state.setup.startMonth)] || 'Jan'],
-        ['Income Tax Rate', `${n(state.setup.taxRate)}%`],
-        ['Owner Contribution', n(state.setup.ownerContribution)],
-        ['Loan Funding', n(state.setup.loanAmount)],
-        ['Generated On', new Date().toLocaleString('en-ZA')],
-      ];
+      const makeSheet = (subtitle, rows, totalRows = [], percentRows = []) => {
+        const data = [[state.setup.businessName], [subtitle], rows[0], ...rows.slice(1)];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const lastCol = Math.max(1, data[2].length - 1);
+        ws['!merges'] = [
+          { s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } },
+          { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } }
+        ];
+        applySheetStyles(ws, totalRows.map(r => r + 2), percentRows.map(r => r + 2));
+        return ws;
+      };
 
-      const assumptions = [
+      const assumptionsRows = [
         ['Section', 'Item', 'Value'],
         ['Setup', 'Business Name', state.setup.businessName],
         ['Setup', 'Projection Type', state.setup.projectionMode === '12' ? '12-Month Projection' : '5-Year Projection'],
@@ -1042,24 +777,28 @@
         ['Setup', 'Owner Contribution', n(state.setup.ownerContribution)],
         ['Setup', 'Loan Amount', n(state.setup.loanAmount)],
         ['Setup', 'Loan Term (Months)', n(state.setup.loanTermMonths)],
-        ['Setup', 'Annual Interest Rate (%)', n(state.setup.annualInterestRate)],
-        ['Setup', 'Income Tax Rate (%)', n(state.setup.taxRate)],
+        ['Setup', 'Annual Interest Rate', n(state.setup.annualInterestRate) / 100],
+        ['Setup', 'Income Tax Rate', n(state.setup.taxRate) / 100],
         ['Setup', 'Other Income per Month', n(state.setup.otherIncomeMonthly)],
-        ['Setup', 'Target Annual Sales Growth (%)', n(state.setup.salesGrowthAnnual)],
-        [],
-        ['Products', 'Name', 'Selling Price / Units / Cost per Unit'],
-        ...state.products.map(x => ['Products', x.name, `${n(x.price)} / ${n(x.unitsPerMonth)} / ${n(x.costPerUnit)}`]),
-        [],
-        ['Salaries', 'Role', 'People / Monthly Salary / Pre-Sales Months'],
-        ...state.salaries.map(x => ['Salaries', x.role, `${n(x.people)} / ${n(x.monthlySalary)} / ${n(x.presalesMonths)}`]),
-        [],
-        ['Expenses', 'Name', 'Monthly Amount / Annual Increase %'],
-        ...state.expenses.map(x => ['Expenses', x.name, `${n(x.monthlyAmount)} / ${n(x.annualIncrease)}`]),
+        ['Setup', 'Target Annual Sales Growth', n(state.setup.salesGrowthAnnual) / 100]
       ];
 
-      const incomeStatement = [
-        [state.setup.businessName],
-        ['Income Statement'],
+      const salesForecastRows = [
+        ['Line Item', ...p.periods.map(x => x.label)],
+        ...p.revenueRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
+        ['Other Income', ...p.periods.map((period, idx) => getOverride(p.otherIncomeRow.key, period.key, p.otherIncomeRow.values[idx]))],
+        ['Total Sales Revenue', ...p.totalRevenue]
+      ];
+
+      const expenseBudgetRows = [
+        ['Line Item', ...p.periods.map(x => x.label)],
+        ...p.salaryRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
+        ...p.expenseRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
+        ['Total Salaries and Wages', ...p.totalSalaries],
+        ['Total Operating Expenses', ...p.totalExpenses]
+      ];
+
+      const incomeRows = [
         ['Line Item', ...p.periods.map(x => x.label)],
         ['Sales Revenue', ...p.totalRevenue],
         ['Cost of Sales', ...p.totalCOS],
@@ -1070,83 +809,40 @@
         ['Finance Costs', ...p.financeCosts],
         ['Net Profit Before Tax', ...p.netProfitBeforeTax],
         ['Income Tax', ...p.incomeTax],
-        ['Net Profit After Tax', ...p.netProfitAfterTax],
+        ['Net Profit After Tax', ...p.netProfitAfterTax]
       ];
 
-      const cashFlow = [
-        [state.setup.businessName],
-        ['Cash Flow Statement'],
+      const cashRows = [
         ['Line Item', ...p.periods.map(x => x.label)],
         ['Opening Cash Balance', ...p.cashBalances.map(x => x.opening)],
         ['Cash Inflows', ...p.cashBalances.map(x => x.inflow)],
         ['Cash Outflows', ...p.cashBalances.map(x => x.outflow)],
-        ['Closing Cash Balance', ...p.cashBalances.map(x => x.closing)],
+        ['Closing Cash Balance', ...p.cashBalances.map(x => x.closing)]
       ];
 
-      const balanceSheet = [
-        [state.setup.businessName],
-        ['Balance Sheet'],
+      const balanceRows = [
         ['Line Item', ...p.periods.map(x => x.label)],
         ['Cash', ...p.balanceSheet.map(x => x.cash)],
         ['Total Assets', ...p.balanceSheet.map(x => x.totalAssets)],
         ['Loan Payable', ...p.balanceSheet.map(x => x.loanPayable)],
-        ["Owner's Equity and Retained Earnings", ...p.balanceSheet.map(x => x.equity)],
+        ["Owner's Equity and Retained Earnings", ...p.balanceSheet.map(x => x.equity)]
       ];
 
-      const salesForecast = [
-        [state.setup.businessName],
-        ['Sales Forecast'],
-        ['Line Item', ...p.periods.map(x => x.label)],
-        ...p.revenueRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
-        ['Other Income', ...p.periods.map((period, idx) => getOverride(p.otherIncomeRow.key, period.key, p.otherIncomeRow.values[idx]))],
-        ['Total Sales Revenue', ...p.totalRevenue],
-      ];
-
-      const expenseBudget = [
-        [state.setup.businessName],
-        ['Expense Budget'],
-        ['Line Item', ...p.periods.map(x => x.label)],
-        ...p.salaryRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
-        ...p.expenseRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
-        ['Total Salaries and Wages', ...p.totalSalaries],
-        ['Total Operating Expenses', ...p.totalExpenses],
-      ];
-
-      const breakEven = [
-        [state.setup.businessName],
-        ['Break-Even Analysis'],
+      const breakEvenRows = [
         ['Metric', 'Value'],
         ['Fixed Costs (first period)', (p.totalSalaries[0] || 0) + (p.totalExpenses[0] || 0)],
         ['Gross Profit Margin', p.grossMarginPercent],
         ['Break-Even Sales', p.breakEvenSales],
-        ['Startup Cost Requirement', p.startupTotal],
+        ['Startup Cost Requirement', p.startupTotal]
       ];
 
-      const sheets = [
-        ['Cover', cover],
-        ['Assumptions', assumptions],
-        ['Sales Forecast', salesForecast],
-        ['Expense Budget', expenseBudget],
-        ['Income Statement', incomeStatement],
-        ['Cash Flow', cashFlow],
-        ['Balance Sheet', balanceSheet],
-        ['Break-Even', breakEven],
-      ];
-
-      sheets.forEach(([name, data]) => {
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        const maxCols = Math.max(...data.map(r => r.length));
-        ws['!cols'] = Array.from({ length: maxCols }, (_, idx) => ({ wch: idx === 0 ? 34 : 16 }));
-        ws['!merges'] = ws['!merges'] || [];
-        if (data.length > 0) ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: Math.max(1, maxCols - 1) } });
-        if (data.length > 1 && data[1].length > 0) ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: Math.max(1, maxCols - 1) } });
-        Object.keys(ws).forEach(cell => {
-          if (cell[0] === '!') return;
-          const addr = XLSX.utils.decode_cell(cell);
-          if (addr.r >= 2 && addr.c >= 1 && typeof ws[cell].v === 'number') ws[cell].z = (name === 'Break-Even' && addr.r === 4) ? '0.0%' : 'R #,##0';
-        });
-        XLSX.utils.book_append_sheet(wb, ws, name);
-      });
+      XLSX.utils.book_append_sheet(wb, makeSheet('Assumptions', assumptionsRows, [], [8, 9, 11]), 'Assumptions');
+      XLSX.utils.book_append_sheet(wb, makeSheet('Sales Forecast', salesForecastRows, [salesForecastRows.length - 1]), 'Sales Forecast');
+      XLSX.utils.book_append_sheet(wb, makeSheet('Expense Budget', expenseBudgetRows, [expenseBudgetRows.length - 2, expenseBudgetRows.length - 1]), 'Expense Budget');
+      XLSX.utils.book_append_sheet(wb, makeSheet('Income Statement', incomeRows, [3, 6, 10]), 'Income Statement');
+      XLSX.utils.book_append_sheet(wb, makeSheet('Cash Flow Statement', cashRows, [4]), 'Cash Flow');
+      XLSX.utils.book_append_sheet(wb, makeSheet('Balance Sheet', balanceRows, [2, 4]), 'Balance Sheet');
+      XLSX.utils.book_append_sheet(wb, makeSheet('Break-Even Analysis', breakEvenRows, [4], [2]), 'Break-Even');
 
       XLSX.writeFile(wb, `${String(state.setup.businessName || 'financial_projections').replace(/\s+/g, '_')}.xlsx`);
     }
@@ -1163,7 +859,7 @@
         ['Operating Profit', ...p.operatingProfit],
         ['Finance Costs', ...p.financeCosts],
         ['Net Profit After Tax', ...p.netProfitAfterTax],
-        ['Closing Cash Balance', ...p.cashBalances.map(x => x.closing)],
+        ['Closing Cash Balance', ...p.cashBalances.map(x => x.closing)]
       ];
       const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
