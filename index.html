@@ -1,247 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SA Funding Financial Engine</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .table-input { width: 100px; text-align: right; border: 1px solid #dee2e6; border-radius: 4px; }
-        .sticky-top { top: 20px; }
-        .chart-container { position: relative; height: 300px; width: 100%; }
-        th { background-color: #f8f9fa !important; font-size: 0.85rem; }
-    </style>
-</head>
-<body>
+function exportExcel() {
+    const p = computeProjection();
+    const wb = XLSX.utils.book_new();
 
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-lg-7">
-            <div class="card p-4">
-                <h4 class="mb-3">1. Business Setup & Parameters</h4>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Business Name</label>
-                        <input type="text" id="bizName" class="form-control" value="Cape Tech Solutions">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Opening Cash (ZAR)</label>
-                        <input type="number" id="openingBal" class="form-control" value="50000" onchange="updateDashboard()">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">COS % (Cost of Sales)</label>
-                        <input type="number" id="cosPct" class="form-control" value="35" onchange="updateDashboard()">
-                    </div>
-                </div>
-                
-                <div class="row mt-3">
-                    <div class="col-md-4">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="isVATRegistered" checked onchange="updateDashboard()">
-                            <label class="form-check-label">VAT Registered (15%)</label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="isSBC" checked onchange="updateDashboard()">
-                            <label class="form-check-label">SBC Tax Rates (SARS)</label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">DSO (Payment Lag)</label>
-                        <select id="dso" class="form-select form-select-sm" onchange="updateDashboard()">
-                            <option value="0">COD (0 Days)</option>
-                            <option value="30" selected>30 Days Lag</option>
-                            <option value="60">60 Days Lag</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+    const makeSheet = (subtitle, rows, totalRows = [], percentRows = []) => {
+        const data = [[state.setup.businessName], [subtitle], rows[0], ...rows.slice(1)];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const lastCol = Math.max(1, data[2].length - 1);
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } }, { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } }];
+        applySheetStyles(ws, totalRows.map(r => r + 2), percentRows.map(r => r + 2));
+        return ws;
+    };
 
-            <div class="card p-4">
-                <h4 class="mb-3">2. 6-Month Projection Input</h4>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle">
-                        <thead>
-                            <tr id="headerRow"><th>Line Item</th></tr>
-                        </thead>
-                        <tbody id="inputBody">
-                            </tbody>
-                    </table>
-                </div>
-                <p class="text-muted small">* Enter monthly values above to see real-time chart updates.</p>
-            </div>
-        </div>
+    // 1. Detailed Startup Budget (Newly Added)
+    const startupDetailRows = [['Item Description', 'Amount (ZAR)'], 
+        ...state.startupCosts.map(c => [c.name, n(c.amount)]),
+        ['TOTAL STARTUP CAPITAL REQUIRED', p.startupTotal]];
 
-        <div class="col-lg-5">
-            <div class="sticky-top">
-                <div class="card p-4 text-center">
-                    <button onclick="exportExcel()" class="btn btn-success btn-lg w-100 mb-2">
-                        Download Funding-Ready Excel
-                    </button>
-                    <div class="d-flex justify-content-around mt-2">
-                        <div><small class="text-muted">Avg. Net Margin</small><br><strong id="statMargin">0%</strong></div>
-                        <div><small class="text-muted">Total Cash Runway</small><br><strong id="statRunway">0 Mo</strong></div>
-                    </div>
-                </div>
+    // 2. Sales Forecast (Including Other Income)
+    const salesForecastRows = [['Line Item', ...p.periods.map(x => x.label)],
+        ...p.revenueRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
+        ['Other Income', ...p.periods.map((period, idx) => getOverride(p.otherIncomeRow.key, period.key, p.otherIncomeRow.values[idx]))],
+        ['Total Sales Revenue', ...p.totalRevenue]];
 
-                <div class="card p-3">
-                    <div class="chart-container">
-                        <canvas id="cashChart"></canvas>
-                    </div>
-                </div>
+    // 3. Detailed Operating Budget (Salaries + Expenses)
+    const expenseBudgetRows = [['Line Item', ...p.periods.map(x => x.label)],
+        ['-- SALARIES --', ...p.periods.map(() => '')],
+        ...p.salaryRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
+        ['-- OPERATING EXPENSES --', ...p.periods.map(() => '')],
+        ...p.expenseRows.map(row => [row.name, ...p.periods.map((period, idx) => getOverride(row.key, period.key, row.values[idx]))]),
+        ['TOTAL OPERATING EXPENDITURE', ...p.totalExpenses.map((v, i) => v + p.totalSalaries[i])]];
 
-                <div class="card p-3">
-                    <div class="chart-container">
-                        <canvas id="profitChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    // 4. Income Statement
+    const incomeRows = [['Line Item', ...p.periods.map(x => x.label)],
+        ['Sales Revenue', ...p.totalRevenue],
+        ['Cost of Sales', ...p.totalCOS],
+        ['Gross Profit', ...p.grossProfit],
+        ['Operating Expenses (incl. Salaries)', ...p.totalExpenses.map((v, i) => v + p.totalSalaries[i])],
+        ['Operating Profit (EBIT)', ...p.operatingProfit],
+        ['Finance Costs', ...p.financeCosts],
+        ['Net Profit Before Tax', ...p.netProfitBeforeTax],
+        ['Income Tax', ...p.incomeTax],
+        ['Net Profit After Tax', ...p.netProfitAfterTax]];
 
-<script>
-    // 1. DATA STRUCTURE
-    const periods = ["Month 1", "Month 2", "Month 3", "Month 4", "Month 5", "Month 6"];
-    const rows = [
-        { label: "Revenue (Sales)", type: "revenue", values: [30000, 45000, 55000, 70000, 85000, 100000] },
-        { label: "Salaries & Wages", type: "salary", values: [15000, 15000, 25000, 25000, 25000, 25000] },
-        { label: "Operating Expenses", type: "expense", values: [8000, 8500, 9000, 9000, 10000, 10000] }
-    ];
-
-    // 2. INITIALIZE UI
-    function initUI() {
-        const hRow = document.getElementById('headerRow');
-        periods.forEach(p => hRow.innerHTML += `<th>${p}</th>`);
-
-        const tbody = document.getElementById('inputBody');
-        rows.forEach((row, rIdx) => {
-            let tr = `<tr><td><strong>${row.label}</strong></td>`;
-            row.values.forEach((v, vIdx) => {
-                tr += `<td><input type="number" class="table-input" value="${v}" 
-                        onchange="updateValue(${rIdx}, ${vIdx}, this.value)"></td>`;
-            });
-            tr += `</tr>`;
-            tbody.innerHTML += tr;
-        });
-        initCharts();
-        updateDashboard();
-    }
-
-    function updateValue(rIdx, vIdx, val) {
-        rows[rIdx].values[vIdx] = parseFloat(val) || 0;
-        updateDashboard();
-    }
-
-    // 3. CALCULATION LOGIC (Incorporating SBC Tax, VAT, and DSO)
-    const calculateSBCTax = (ebit) => {
-        const annual = ebit * 12; // Simple annualized projection
-        if (annual <= 95750) return 0;
-        if (annual <= 365000) return (annual - 95750) * 0.07 / 12;
-        return (57698 + (annual - 550000) * 0.27) / 12;
-    };
-
-    function computeData() {
-        const isVAT = document.getElementById('isVATRegistered').checked;
-        const isSBC = document.getElementById('isSBC').checked;
-        const dso = parseInt(document.getElementById('dso').value);
-        const openingBal = parseFloat(document.getElementById('openingBal').value);
-        const cosPct = parseFloat(document.getElementById('cosPct').value) / 100;
-
-        let cash = openingBal;
-        let prevRev = 0;
-        let p = { rev: [], exp: [], profit: [], cash: [], tax: [] };
-
-        periods.forEach((_, i) => {
-            const rev = rows[0].values[i];
-            const sal = rows[1].values[i];
-            const opex = rows[2].values[i];
-            const cos = rev * cosPct;
-            
-            const totalExp = sal + opex + cos;
-            const ebit = rev - totalExp;
-            const tax = ebit > 0 ? (isSBC ? calculateSBCTax(ebit) : ebit * 0.27) : 0;
-            
-            // Cash Flow with DSO Lag (30 days = 100% lag)
-            const dsoWeight = dso / 30;
-            const cashIn = ((1 - dsoWeight) * rev) + (dsoWeight * prevRev);
-            const vatFactor = isVAT ? 1.15 : 1;
-            
-            const monthlyCashIn = cashIn * vatFactor;
-            const monthlyCashOut = (cos + opex) * vatFactor + sal + tax;
-            
-            cash += (monthlyCashIn - monthlyCashOut);
-            
-            p.rev.push(rev);
-            p.exp.push(totalExp);
-            p.profit.push(ebit - tax);
-            p.cash.push(cash);
-            p.tax.push(tax);
-            prevRev = rev;
-        });
-        return p;
-    }
-
-    // 4. CHARTING & DASHBOARD
-    let cashChart, profitChart;
-
-    function initCharts() {
-        cashChart = new Chart(document.getElementById('cashChart'), {
-            type: 'line',
-            data: { labels: periods, datasets: [{ label: 'Cash Balance (ZAR)', borderColor: '#0d6efd', data: [] }] },
-            options: { maintainAspectRatio: false }
-        });
-        profitChart = new Chart(document.getElementById('profitChart'), {
-            type: 'bar',
-            data: { labels: periods, datasets: [{ label: 'Net Profit', backgroundColor: '#198754', data: [] }] },
-            options: { maintainAspectRatio: false }
-        });
-    }
-
-    function updateDashboard() {
-        const data = computeData();
-        cashChart.data.datasets[0].data = data.cash;
-        profitChart.data.datasets[0].data = data.profit;
-        cashChart.update();
-        profitChart.update();
-
-        // Stats
-        const avgMargin = (data.profit.reduce((a,b)=>a+b,0) / data.rev.reduce((a,b)=>a+b,0)) * 100;
-        document.getElementById('statMargin').innerText = avgMargin.toFixed(1) + "%";
-        
-        const runway = data.cash.filter(c => c > 0).length;
-        document.getElementById('statRunway').innerText = runway === 6 ? "6+ Mo" : runway + " Mo";
-    }
-
-    // 5. EXPORT
-    function exportExcel() {
-        const p = computeData();
-        const biz = document.getElementById('bizName').value;
-        const wb = XLSX.utils.book_new();
-        
-        const aoa = [
-            [biz.toUpperCase()],
-            ["Financial Projections (6-Month Forecast)"],
-            ["", ...periods],
-            ["Revenue", ...p.rev],
-            ["Total Expenses", ...p.exp],
-            ["Tax (SBC Scale)", ...p.tax],
-            ["Net Profit After Tax", ...p.profit],
-            ["", ""],
-            ["Cash Position", ...p.cash]
-        ];
-
-        const ws = XLSX.utils.aoa_to_sheet(aoa);
-        XLSX.utils.book_append_sheet(wb, ws, "Projections");
-        XLSX.writeFile(wb, `${biz}_Financials.xlsx`);
-    }
-
-    window.onload = initUI;
-</script>
-</body>
-</html>
+    XLSX.utils.book_append_sheet(wb, makeSheet('Startup Budget', startupDetailRows, [startupDetailRows.length - 1]), 'Startup Costs');
+    XLSX.utils.book_append_sheet(wb, makeSheet('Sales Forecast', salesForecastRows, [salesForecastRows.length - 1]), 'Sales Forecast');
+    XLSX.utils.book_append_sheet(wb, makeSheet('Expense Budget', expenseBudgetRows, [expenseBudgetRows.length - 1]), 'Expense Budget');
+    XLSX.utils.book_append_sheet(wb, makeSheet('Income Statement', incomeRows, [3, 5, 9]), 'Income Statement');
+    // ... [Add Cash Flow and Balance Sheet as per your existing code]
+    
+    XLSX.writeFile(wb, `${state.setup.businessName.replace(/\s+/g, '_')}_Full_Projections.xlsx`);
+}
