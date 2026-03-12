@@ -3,443 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iTheta Labs - Financial Planning Dashboard</title>
+    <title>iTheta Labs - Comprehensive Financial Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
-        
-        /* Table & Report Styling */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem; }
-        th { background-color: #1e293b; color: white; padding: 0.75rem; text-align: left; font-weight: 600; }
-        td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
-        tr:nth-child(even) { background-color: #f1f5f9; }
-        .total-row { font-weight: 700; background-color: #e2e8f0 !important; }
-        
-        .section-title { border-left: 4px solid #3b82f6; padding-left: 1rem; margin-top: 1.5rem; margin-bottom: 1rem; font-weight: 700; color: #1e293b; font-size: 1.125rem; }
-        .report-card { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; }
-        
-        /* Metrics Styling */
-        .metric-box { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 0.5rem; text-align: center; }
-        .metric-title { font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.05em; }
-        .metric-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-top: 0.5rem; }
-        
-        /* Form Inputs */
-        label { font-size: 0.875rem; font-weight: 600; color: #334155; }
-        input, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; font-size: 0.875rem; }
-        input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; }
-
-        /* Print Optimization */
-        @media print {
-            body { background-color: white; }
-            .no-print { display: none !important; }
-            .report-card { box-shadow: none; border: none; margin-bottom: 1rem; padding: 0; }
-            table { page-break-inside: auto; }
-            tr { page-break-inside: avoid; page-break-after: auto; }
-            h1, h2, h3 { page-break-after: avoid; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        .tab-btn { padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 2px solid transparent; transition: all 0.2s; color: #64748b; font-size: 0.875rem; white-space: nowrap; }
+        .tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; background: #eff6ff; }
+        .table-container { overflow-x: auto; background: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.815rem; }
+        th { background: #f8fafc; padding: 0.75rem; text-align: left; font-weight: 700; border-bottom: 2px solid #e2e8f0; position: sticky; left: 0; z-index: 10; }
+        td { padding: 0.4rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+        .sticky-col { position: sticky; left: 0; background: white; font-weight: 600; border-right: 1px solid #e2e8f0; min-width: 180px; }
+        .edit-input { width: 90px; border: 1px solid #cbd5e1; border-radius: 0.25rem; padding: 0.2rem 0.4rem; text-align: right; font-family: monospace; font-size: 0.75rem; }
+        .global-input { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; font-size: 0.875rem; }
+        .metric-card { background: white; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
+        .report-section { display: none; }
+        .report-section.active { display: block; }
+        .total-row { background: #f8fafc; font-weight: 800; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="pb-12">
 
-    <div class="max-w-7xl mx-auto">
-        <header class="mb-8 border-b pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div class="max-w-[1650px] mx-auto px-4 py-6">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <div>
-                <h1 class="text-3xl font-extrabold text-slate-900">Financial Planning Dashboard</h1>
-                <p class="text-slate-500 mt-1">Cape Town Operations • SARS, VAT & IFRS Compliant Engine</p>
+                <h1 class="text-2xl font-bold text-slate-900">iTheta Financial Suite</h1>
+                <p class="text-slate-500 text-sm">Professional Business Plan Projections (IFRS/SARS)</p>
             </div>
-            <div class="no-print flex gap-3">
-                <button onclick="calculate()" class="bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded hover:bg-slate-200 border border-slate-300 transition">
-                    Refresh
-                </button>
-                <button onclick="exportPDF()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 shadow-sm transition flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Export to PDF
-                </button>
+            <div class="flex flex-wrap gap-3">
+                <button onclick="exportJSON()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-900 transition">Save Project (JSON)</button>
+                <button onclick="document.getElementById('importFile').click()" class="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold">Load Project</button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importJSON(event)">
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            
-            <aside class="lg:col-span-1 no-print">
-                <div class="bg-white p-5 rounded-lg shadow-sm border sticky top-8 max-h-[90vh] overflow-y-auto">
-                    <h2 class="text-lg font-bold mb-4 text-slate-800 border-b pb-2">Configuration Matrix</h2>
-                    
-                    <div class="space-y-4">
-                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                            <label class="text-blue-900">Scenario (Stress Test)</label>
-                            <select id="scenario" class="font-medium text-slate-800 bg-white">
-                                <option value="base">Base Case (100%)</option>
-                                <option value="stress">Pessimistic (80% Rev, 110% Costs)</option>
-                                <option value="optimistic">Optimistic (120% Rev, 90% Costs)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label>VAT Registered</label>
-                                <select id="vatRegistered">
-                                    <option value="yes">Yes (15%)</option>
-                                    <option value="no">No</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Tax Regime</label>
-                                <select id="taxRegime">
-                                    <option value="sbc">SBC Scale</option>
-                                    <option value="std">Standard (27%)</option>
-                                </select>
-                            </div>
-                        </div>
+        <div class="bg-white p-6 rounded-xl border border-slate-200 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Projection Period</label>
+                    <select id="duration" class="global-input" onchange="state.duration=Number(this.value); calculate();">
+                        <option value="12">12 Months (1 Year)</option>
+                        <option value="24">24 Months (2 Years)</option>
+                        <option value="36">36 Months (3 Years)</option>
+                        <option value="60">60 Months (5 Years)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Tax Regime</label>
+                    <select id="taxRegime" class="global-input" onchange="state.setup.taxRegime=this.value; calculate();">
+                        <option value="sbc">SBC (Sliding Scale)</option>
+                        <option value="std">Corporate (27%)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">VAT Status</label>
+                    <select id="vatStatus" class="global-input" onchange="state.setup.vat=this.value==='yes'; calculate();">
+                        <option value="no">Not Registered</option>
+                        <option value="yes">VAT Registered (15%)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Days Sales Outstanding (DSO)</label>
+                    <input type="number" id="dso" class="global-input" value="30" oninput="state.setup.dso=Number(this.value); calculate();">
+                </div>
+            </div>
+        </div>
 
-                        <div>
-                            <label>Days Sales Outstanding (DSO)</label>
-                            <select id="dso">
-                                <option value="0">0 Days (Immediate)</option>
-                                <option value="30">30 Days</option>
-                                <option value="60">60 Days</option>
-                            </select>
-                        </div>
+        <nav class="flex overflow-x-auto border-b border-slate-200 mb-6 bg-white rounded-t-xl no-scrollbar">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">Summary & Liquidity</button>
+            <button class="tab-btn" onclick="switchTab('income')">Profit & Loss</button>
+            <button class="tab-btn" onclick="switchTab('cashflow')">Cash Flow</button>
+            <button class="tab-btn" onclick="switchTab('balance')">Balance Sheet</button>
+            <button class="tab-btn" onclick="switchTab('personnel')">Personnel Plan</button>
+            <button class="tab-btn" onclick="switchTab('breakeven')">Break-Even Analysis</button>
+            <button class="tab-btn" onclick="switchTab('stress')">Stress Test</button>
+        </nav>
 
-                        <hr class="border-slate-200">
-                        
-                        <div><label>Starting Subscriptions</label><input type="number" id="startSubs" value="150"></div>
-                        <div><label>Monthly Growth (Clients)</label><input type="number" id="growthRate" value="12"></div>
-                        <div><label>Avg Subscription Fee (R)</label><input type="number" id="subFee" value="3500"></div>
-                        <div><label>Direct Costs (% of Rev)</label><input type="number" id="directCostPct" value="12"></div>
-                        <div><label>Year 1 Operating Expenses (R)</label><input type="number" id="year1OpEx" value="4850000"></div>
-                        <div><label>Depreciation & Interest (R)</label><input type="number" id="deprInt" value="185000"></div>
-                        <div><label>Starting Assets (Equity) (R)</label><input type="number" id="startingAssets" value="4000000"></div>
-                        
-                        <div class="pt-2">
-                            <button onclick="calculate()" class="w-full bg-slate-800 text-white font-bold py-2 px-4 rounded hover:bg-slate-900 transition">Update Reports</button>
-                        </div>
+        <div id="tab-dashboard" class="report-section active">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="metric-card"><p class="text-xs font-bold text-slate-400">Current Ratio (Liquidity)</p><h2 id="m-ratio" class="text-2xl font-black text-blue-600">0.0</h2></div>
+                <div class="metric-card"><p class="text-xs font-bold text-slate-400">Net Profit (Total)</p><h2 id="m-profit" class="text-2xl font-black text-slate-800">R 0</h2></div>
+                <div class="metric-card"><p class="text-xs font-bold text-slate-400">Closing Cash</p><h2 id="m-cash" class="text-2xl font-black text-emerald-600">R 0</h2></div>
+                <div class="metric-card"><p class="text-xs font-bold text-slate-400">Monthly Burn Rate</p><h2 id="m-burn" class="text-2xl font-black text-red-600">R 0</h2></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="metric-card"><h3 class="font-bold mb-4">Revenue vs Expenses</h3><canvas id="chartRP" height="280"></canvas></div>
+                <div class="metric-card"><h3 class="font-bold mb-4">Liquidity (Current Ratio) Trend</h3><canvas id="chartLiq" height="280"></canvas></div>
+            </div>
+        </div>
+
+        <div id="tab-income" class="report-section"><div id="table-income" class="table-container"></div></div>
+        <div id="tab-cashflow" class="report-section"><div id="table-cashflow" class="table-container"></div></div>
+        <div id="tab-balance" class="report-section"><div id="table-balance" class="table-container"></div></div>
+        <div id="tab-personnel" class="report-section"><div id="table-personnel" class="table-container"></div></div>
+        <div id="tab-breakeven" class="report-section"><div id="table-breakeven" class="table-container"></div></div>
+
+        <div id="tab-stress" class="report-section">
+            <div class="bg-red-50 p-6 rounded-xl border border-red-100 mb-6">
+                <h3 class="text-lg font-bold text-red-900 mb-4">Emergency Sensitivity Testing</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-sm font-bold text-red-800">Revenue Multiplier: <span id="v-rev">100%</span></label>
+                        <input type="range" min="50" max="150" value="100" class="w-full" oninput="state.stress.rev=this.value/100; document.getElementById('v-rev').innerText=this.value+'%'; calculate();">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-red-800">Cost Multiplier: <span id="v-cost">100%</span></label>
+                        <input type="range" min="50" max="150" value="100" class="w-full" oninput="state.stress.cost=this.value/100; document.getElementById('v-cost').innerText=this.value+'%'; calculate();">
                     </div>
                 </div>
-            </aside>
-
-            <main class="lg:col-span-3" id="printable-area">
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div class="metric-box">
-                        <div class="metric-title">Current Ratio</div>
-                        <div class="metric-value text-blue-600" id="metricCurrentRatio">0.0</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-title">Monthly Burn / Free Cash</div>
-                        <div class="metric-value" id="metricBurnRate">R 0</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-title">Total Headcount</div>
-                        <div class="metric-value text-slate-800" id="metricHeadcount">0</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-title">Tax Regime Applied</div>
-                        <div class="metric-value text-slate-800" id="metricTaxRegime" style="font-size:1.125rem; line-height:2rem;">Standard</div>
-                    </div>
-                </div>
-
-                <div class="report-card">
-                    <h3 class="section-title mt-0">6.2.2 Monthly Sales Volume (Year 1)</h3>
-                    <div class="table-container">
-                        <table id="monthlySalesTable">
-                            <thead>
-                                <tr>
-                                    <th>Month</th>
-                                    <th>Active Subscriptions</th>
-                                    <th>Avg Fee (Excl. VAT)</th>
-                                    <th>Total Revenue</th>
-                                    <th>Cash Collected (Inc. VAT)</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="report-card">
-                        <h3 class="section-title mt-0">6.2.3 Profit & Loss (Excl. VAT)</h3>
-                        <table id="plTable"><tbody></tbody></table>
-                    </div>
-
-                    <div class="report-card">
-                        <h3 class="section-title mt-0">6.2.4 Cashflow Projection</h3>
-                        <table id="cashflowTable"><tbody></tbody></table>
-                    </div>
-                </div>
-
-                <div class="report-card">
-                    <h3 class="section-title mt-0">6.2.5 Break-Even Analysis (Monthly)</h3>
-                    <table id="breakevenTable"><tbody></tbody></table>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="report-card">
-                        <h3 class="section-title mt-0">6.2.6 Balance Sheet (Year 1 End)</h3>
-                        <table id="balanceSheetTable"><tbody></tbody></table>
-                    </div>
-
-                    <div class="report-card">
-                        <h3 class="section-title mt-0">6.2.7 Personnel Plan</h3>
-                        <table id="personnelTable">
-                            <thead>
-                                <tr><th>Role</th><th>Staff</th><th>Monthly Salary</th><th>Annual Cost</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="report-card">
-                    <h3 class="section-title mt-0">6.3 Five-Year Summary</h3>
-                    <div class="table-container">
-                        <table id="fiveYearTable">
-                            <thead>
-                                <tr>
-                                    <th>Metric (All figures in R'000)</th>
-                                    <th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th><th>Year 5</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </main>
+            </div>
+            <div id="table-stress" class="table-container"></div>
         </div>
     </div>
 
     <script>
-        // Formatting Helpers
-        const formatR = (val) => "R " + Number(val).toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-        const formatK = (val) => "R " + Math.round(val / 1000).toLocaleString('en-ZA') + "k";
+        let state = {
+            duration: 12,
+            setup: { dso: 30, taxRegime: 'sbc', vat: false },
+            stress: { rev: 1.0, cost: 1.0 },
+            overrides: {},
+            personnel: [
+                { id: 'p1', role: 'Director', salary: 45000, count: 1 },
+                { id: 'p2', role: 'Support Staff', salary: 12000, count: 2 }
+            ],
+            lineItems: {
+                revenue: [{ id: 'r1', name: 'Primary Service', base: 120000 }],
+                expense: [{ id: 'e1', name: 'Rent & Utilities', base: 15000 }, { id: 'e2', name: 'Marketing', base: 8000 }]
+            }
+        };
 
-        // Main Calculation Engine
+        let charts = {};
+
+        function switchTab(id) {
+            document.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            event.target.classList.add('active');
+            calculate();
+        }
+
+        function setOverride(rowId, mIdx, val) {
+            if (!state.overrides[rowId]) state.overrides[rowId] = {};
+            state.overrides[rowId][mIdx] = Number(val);
+            calculate();
+        }
+
         function calculate() {
-            // Read Inputs
-            const startSubs = parseInt(document.getElementById('startSubs').value);
-            const growth = parseInt(document.getElementById('growthRate').value);
-            const fee = parseFloat(document.getElementById('subFee').value);
-            const directPctInput = parseFloat(document.getElementById('directCostPct').value) / 100;
-            const opExTotal = parseFloat(document.getElementById('year1OpEx').value);
-            const deprInt = parseFloat(document.getElementById('deprInt').value);
-            const startAssets = parseFloat(document.getElementById('startingAssets').value);
-
-            // Functional Options
-            const scenario = document.getElementById('scenario').value;
-            const isVatRegistered = document.getElementById('vatRegistered').value === 'yes';
-            const taxRegime = document.getElementById('taxRegime').value;
-            const dsoMonths = parseInt(document.getElementById('dso').value) / 30;
-
-            // Apply Scenario Modifiers
-            let revMult = 1.0;
-            let costMult = 1.0;
-            if (scenario === 'stress') { revMult = 0.8; costMult = 1.1; }
-            if (scenario === 'optimistic') { revMult = 1.2; costMult = 0.9; }
-
-            const directPct = directPctInput * costMult;
+            const months = state.duration;
             const vatRate = 0.15;
-            const vatMult = isVatRegistered ? (1 + vatRate) : 1.0;
+            const vatMult = state.setup.vat ? 1.15 : 1.0;
+            
+            let data = { income: [], cash: [], balance: [], personnel: [], be: [] };
+            let monthlyRev = Array(months).fill(0);
+            let monthlyCos = Array(months).fill(0);
+            let monthlySal = Array(months).fill(0);
+            let monthlyOpex = Array(months).fill(0);
+            let cashPosition = Array(months).fill(0);
+            let currentRatio = Array(months).fill(0);
 
-            // 1. Monthly Sales & DSO (Days Sales Outstanding) Logic
-            let monthlyRevs = [];
-            let cashInflows = [];
-            let currentSubs = startSubs;
-            let totalYear1Rev = 0;
-            let salesHtml = "";
+            // 1. Personnel Calculations
+            state.personnel.forEach(p => {
+                let row = { name: p.role, id: p.id, values: [] };
+                for (let m = 0; m < months; m++) {
+                    let val = (state.overrides[p.id] && state.overrides[p.id][m] !== undefined) ? state.overrides[p.id][m] : (p.salary * p.count);
+                    row.values.push(val);
+                    monthlySal[m] += val;
+                }
+                data.personnel.push(row);
+            });
 
-            for (let m = 1; m <= 12; m++) {
-                let rev = currentSubs * (fee * revMult);
-                monthlyRevs.push(rev);
-                totalYear1Rev += rev;
+            // 2. Revenue (Excl VAT)
+            state.lineItems.revenue.forEach(item => {
+                let row = { name: item.name, id: item.id, values: [] };
+                for (let m = 0; m < months; m++) {
+                    let val = (state.overrides[item.id] && state.overrides[item.id][m] !== undefined) ? state.overrides[item.id][m] : (item.base * state.stress.rev);
+                    row.values.push(val);
+                    monthlyRev[m] += val;
+                }
+                data.income.push(row);
+            });
+
+            // 3. Expenses (Excl VAT)
+            state.lineItems.expense.forEach(item => {
+                let row = { name: item.name, id: item.id, values: [] };
+                for (let m = 0; m < months; m++) {
+                    let val = (state.overrides[item.id] && state.overrides[item.id][m] !== undefined) ? state.overrides[item.id][m] : (item.base * state.stress.cost);
+                    row.values.push(val);
+                    monthlyOpex[m] += val;
+                }
+                data.income.push(row);
+            });
+
+            // 4. Cash Flow & Liquidity Logic
+            let runningCash = 50000; // Starting buffer
+            for (let m = 0; m < months; m++) {
+                let netOperating = monthlyRev[m] - (monthlyOpex[m] + monthlySal[m]);
+                // Simplified DSO: Delay cash in by 1 month if DSO > 0
+                let cashIn = (m > 0 && state.setup.dso > 0) ? monthlyRev[m-1] * vatMult : monthlyRev[m] * vatMult;
+                let cashOut = (monthlyOpex[m] + monthlySal[m]) * vatMult;
+                runningCash += (cashIn - cashOut);
+                cashPosition[m] = runningCash;
                 
-                // Cash Collection Delay
-                let cashCollected = 0;
-                let refMonthIndex = (m - 1) - dsoMonths;
-                if (refMonthIndex >= 0) {
-                    cashCollected = monthlyRevs[refMonthIndex] * vatMult;
-                }
-                cashInflows.push(cashCollected);
-
-                salesHtml += `<tr><td>Month ${m}</td><td>${currentSubs}</td><td>${formatR(fee * revMult)}</td><td>${formatR(rev)}</td><td class="text-green-700 font-semibold">${formatR(cashCollected)}</td></tr>`;
-                currentSubs += growth;
-            }
-            document.querySelector("#monthlySalesTable tbody").innerHTML = salesHtml;
-
-            // 2. Profit & Loss (VAT Exclusive)
-            const directCosts = totalYear1Rev * directPct;
-            const grossProfit = totalYear1Rev - directCosts;
-            const opExAdjusted = opExTotal * costMult;
-            const ebitda = grossProfit - opExAdjusted;
-            const npbt = ebitda - deprInt;
-            
-            // Tax Logic (SARS 2024/2025 Brackets)
-            let tax = 0;
-            if (npbt > 0) {
-                if (taxRegime === 'sbc') {
-                    if (npbt <= 95750) tax = 0;
-                    else if (npbt <= 365000) tax = (npbt - 95750) * 0.07;
-                    else if (npbt <= 550000) tax = 18848 + (npbt - 365000) * 0.21;
-                    else tax = 57698 + (npbt - 550000) * 0.27;
-                    document.getElementById('metricTaxRegime').innerText = "SBC Scale";
-                } else {
-                    tax = npbt * 0.27;
-                    document.getElementById('metricTaxRegime').innerText = "Standard 27%";
-                }
-            } else {
-                document.getElementById('metricTaxRegime').innerText = "Assessed Loss";
-            }
-            const npat = npbt - tax;
-
-            document.querySelector("#plTable tbody").innerHTML = `
-                <tr><td>Total Revenue</td><td>${formatR(totalYear1Rev)}</td></tr>
-                <tr><td>Direct Costs (${(directPct*100).toFixed(1)}%)</td><td class="text-red-600">(${formatR(directCosts)})</td></tr>
-                <tr class="total-row"><td>Gross Profit</td><td>${formatR(grossProfit)}</td></tr>
-                <tr><td>Operating Expenses</td><td class="text-red-600">(${formatR(opExAdjusted)})</td></tr>
-                <tr class="total-row"><td>EBITDA</td><td>${formatR(ebitda)}</td></tr>
-                <tr><td>Depreciation & Interest</td><td class="text-red-600">(${formatR(deprInt)})</td></tr>
-                <tr class="total-row"><td>Net Profit Before Tax</td><td>${formatR(npbt)}</td></tr>
-                <tr><td>Tax Provision</td><td class="text-red-600">(${formatR(tax)})</td></tr>
-                <tr class="total-row bg-slate-200"><td class="text-blue-700">Net Profit After Tax</td><td class="text-blue-700">${formatR(npat)}</td></tr>
-            `;
-
-            // 3. Cashflow (VAT Inclusive & Add-backs)
-            const totalCashIn = cashInflows.reduce((a,b) => a+b, 0);
-            const cashOutOps = (directCosts + opExAdjusted) * vatMult; 
-            
-            // Assume 50% of DeprInt is Cash Interest; Tax paid in cash
-            const interestPaidNoVat = deprInt * 0.5; 
-            const cashOutFin = tax + interestPaidNoVat;
-            const deprAddBack = deprInt * 0.5; 
-            
-            const netCashflow = totalCashIn - cashOutOps - cashOutFin; 
-
-            document.querySelector("#cashflowTable tbody").innerHTML = `
-                <tr><td>Cash Inflow (Operations inc. VAT)</td><td class="text-green-600">${formatR(totalCashIn)}</td></tr>
-                <tr><td>Cash Outflow (Operations inc. VAT)</td><td class="text-red-600">(${formatR(cashOutOps)})</td></tr>
-                <tr><td>Tax & Finance Payments</td><td class="text-red-600">(${formatR(cashOutFin)})</td></tr>
-                <tr class="total-row"><td>Net Cashflow</td><td class="${netCashflow < 0 ? 'text-red-600' : 'text-green-700'}">${formatR(netCashflow)}</td></tr>
-                <tr class="total-row bg-slate-200"><td>Closing Cash Balance</td><td>${formatR(netCashflow)}</td></tr>
-            `;
-
-            // 4. Break Even
-            const fixedMonthly = 404166 * costMult;
-            const varPerClient = 420 * costMult;
-            const contrib = (fee * revMult) - varPerClient;
-            const beClients = fixedMonthly / contrib;
-
-            document.querySelector("#breakevenTable tbody").innerHTML = `
-                <tr><td>Fixed Monthly Costs</td><td>${formatR(fixedMonthly)}</td></tr>
-                <tr><td>Variable Cost per Client</td><td>${formatR(varPerClient)}</td></tr>
-                <tr><td>Contribution Margin per Client</td><td>${formatR(contrib)}</td></tr>
-                <tr class="total-row"><td>Break-Even Volume</td><td>${Math.ceil(beClients)} Active Clients</td></tr>
-            `;
-
-            // 5. Balance Sheet (Ensuring Assets = Liabilities + Equity)
-            const closingCash = netCashflow; 
-            const accountsReceivable = (totalYear1Rev * vatMult) - totalCashIn;
-            const fixedAssets = startAssets - deprAddBack;
-            
-            let vatPayable = 0;
-            if (isVatRegistered) {
-                // VAT Collected minus VAT Paid
-                vatPayable = (totalYear1Rev * vatRate) - ((directCosts + opExAdjusted) * vatRate);
+                // Current Ratio = Cash / (VAT Payable approximation)
+                let vatPayable = monthlyRev[m] * 0.15;
+                currentRatio[m] = vatPayable > 0 ? (runningCash / vatPayable) : 2.0;
             }
 
-            const currentAssets = closingCash + accountsReceivable;
+            // Render All Tables
+            renderTable('table-income', 'P&L Statement (Excl. VAT)', data.income, months);
+            renderTable('table-cashflow', 'Cash Flow Analysis (Inc. VAT)', [{name: 'Monthly Cash Balance', id: 'cf1', values: cashPosition}], months);
+            renderTable('table-balance', 'Balance Sheet (Pro-Forma)', [{name: 'Cash Assets', id: 'bs1', values: cashPosition}], months);
+            renderTable('table-personnel', 'Headcount & Personnel Plan', data.personnel, months);
+            renderTable('table-stress', 'Stress Test Summary', data.income, months);
             
-            // If VAT Payable is negative, it's technically a receivable, but we map it to Current Liab here for structural simplicity
-            const currentLiabilities = vatPayable; 
-            const totalAssets = currentAssets + fixedAssets;
-            const equity = startAssets + npat; 
+            // Break Even Logic
+            let fixed = monthlyOpex[0] + monthlySal[0];
+            let beUnits = fixed / 500; // Assuming R500 unit margin
+            renderTable('table-breakeven', 'Break-Even Analysis', [{name: 'Required Units', id: 'be1', values: Array(months).fill(beUnits)}], months);
 
-            document.querySelector("#balanceSheetTable tbody").innerHTML = `
-                <tr><td>Cash & Equivalents</td><td>${formatR(closingCash)}</td></tr>
-                <tr><td>Accounts Receivable</td><td>${formatR(accountsReceivable)}</td></tr>
-                <tr><td>Non-Current Assets</td><td>${formatR(fixedAssets)}</td></tr>
-                <tr class="total-row"><td>Total Assets</td><td>${formatR(totalAssets)}</td></tr>
-                <tr><td>Current Liabilities (Net VAT)</td><td>${formatR(currentLiabilities)}</td></tr>
-                <tr><td>Shareholder Equity</td><td>${formatR(equity)}</td></tr>
-                <tr class="total-row bg-slate-200"><td>Total Equity & Liabilities</td><td>${formatR(equity + currentLiabilities)}</td></tr>
-            `;
-
-            // Metrics Computation
-            if (currentLiabilities > 0) {
-                document.getElementById('metricCurrentRatio').innerText = (currentAssets / currentLiabilities).toFixed(2);
-            } else {
-                document.getElementById('metricCurrentRatio').innerText = "High (No Debt)";
-            }
-
-            if (netCashflow < 0) {
-                document.getElementById('metricBurnRate').innerText = formatR(Math.abs(netCashflow) / 12);
-                document.getElementById('metricBurnRate').className = "metric-value text-red-600";
-                document.getElementById('metricBurnRate').previousElementSibling.innerText = "Monthly Burn Rate";
-            } else {
-                document.getElementById('metricBurnRate').innerText = formatR(netCashflow / 12);
-                document.getElementById('metricBurnRate').className = "metric-value text-green-600";
-                document.getElementById('metricBurnRate').previousElementSibling.innerText = "Free Cash Flow (Mo)";
-            }
-
-            // 6. Personnel
-            const salaries = [
-                { role: 'Managing Director', qty: 1, sal: 85000 },
-                { role: 'Operations Lead', qty: 1, sal: 45000 },
-                { role: 'SEO & PPC Specialists', qty: 3, sal: 25000 },
-                { role: 'Sales & Support', qty: 2, sal: 18000 }
-            ];
-            let personHtml = "";
-            let totalHeadcount = 0;
-            salaries.forEach(s => {
-                totalHeadcount += s.qty;
-                personHtml += `<tr><td>${s.role}</td><td>${s.qty}</td><td>${formatR(s.sal)}</td><td>${formatR(s.sal * s.qty * 12)}</td></tr>`;
-            });
-            document.querySelector("#personnelTable tbody").innerHTML = personHtml;
-            document.getElementById('metricHeadcount').innerText = totalHeadcount;
-
-            // 7. Five Year Projections
-            let fiveYearHtml = "";
-            const metricsList = ["Revenue", "Net Profit After Tax", "Cash Position", "Total Assets"];
-            let y1Data = [totalYear1Rev, npat, netCashflow, totalAssets];
-            
-            metricsList.forEach((m, idx) => {
-                let row = `<tr><td>${m}</td>`;
-                let val = y1Data[idx];
-                for(let y=1; y<=5; y++) {
-                    row += `<td>${formatK(val)}</td>`;
-                    val = val * 1.15; // 15% flat annual growth assumption
-                }
-                row += `</tr>`;
-                fiveYearHtml += row;
-            });
-            document.querySelector("#fiveYearTable tbody").innerHTML = fiveYearHtml;
+            updateDashboard(monthlyRev, monthlyOpex, cashPosition, currentRatio);
         }
 
-        // PDF Export Function via html2pdf
-        function exportPDF() {
-            const element = document.getElementById('printable-area');
-            const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5], // top, left, bottom, right
-                filename:     'Financial_Projections_Dashboard.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        function renderTable(containerId, title, rows, count) {
+            let html = `<div class="p-4 font-bold text-slate-700 bg-slate-50 border-b flex justify-between"><span>${title}</span><span class="text-xs text-slate-400">Values are Rands (Manual Override Enabled)</span></div>`;
+            html += `<table><thead><tr><th class="sticky-col">Period</th>`;
+            for (let i = 1; i <= count; i++) html += `<th>M${i}</th>`;
+            html += `</tr></thead><tbody>`;
+            rows.forEach(row => {
+                html += `<tr><td class="sticky-col">${row.name}</td>`;
+                row.values.forEach((v, mIdx) => {
+                    html += `<td><input type="number" class="edit-input" value="${Math.round(v)}" onchange="setOverride('${row.id}', ${mIdx}, this.value)"></td>`;
+                });
+                html += `</tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        function updateDashboard(rev, exp, cash, liq) {
+            document.getElementById('m-ratio').innerText = liq[liq.length-1].toFixed(2);
+            document.getElementById('m-profit').innerText = 'R ' + Math.round(rev.reduce((a,b)=>a+b,0) - exp.reduce((a,b)=>a+b,0)).toLocaleString();
+            document.getElementById('m-cash').innerText = 'R ' + Math.round(cash[cash.length-1]).toLocaleString();
+            
+            if (charts.rp) charts.rp.destroy();
+            if (charts.liq) charts.liq.destroy();
+            
+            const labels = Array.from({length: state.duration}, (_, i) => `M${i+1}`);
+            charts.rp = new Chart(document.getElementById('chartRP'), {
+                type: 'line',
+                data: { labels, datasets: [
+                    { label: 'Revenue', data: rev, borderColor: '#3b82f6', fill: false },
+                    { label: 'Expenses', data: exp, borderColor: '#ef4444', fill: false }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            charts.liq = new Chart(document.getElementById('chartLiq'), {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Current Ratio', data: liq, backgroundColor: '#6366f1' }]},
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(state)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'projection_model.json';
+            a.click();
+        }
+
+        function importJSON(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                state = JSON.parse(event.target.result);
+                calculate();
             };
-            
-            // Visual cue for processing
-            const btn = document.querySelector('button[onclick="exportPDF()"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "Generating PDF...";
-            
-            html2pdf().set(opt).from(element).save().then(() => {
-                btn.innerHTML = originalText;
-            });
+            reader.readAsText(e.target.files[0]);
         }
 
-        // Auto-run on load
         window.onload = calculate;
     </script>
 </body>
