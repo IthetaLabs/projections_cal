@@ -3,340 +3,414 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>South African Financial Projection Tool - Pro</title>
+  <title>Financial Projection Pro (SA Edition)</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root{--bg:#f8fafc;--card:#ffffff;--border:#e2e8f0;--text:#0f172a;--muted:#475569;--soft:#f1f5f9;--primary:#0f172a;--danger:#b91c1c;--warn-bg:#fff7ed;--warn-border:#fdba74;--warn-text:#9a3412;--success:#166534;--highlight:#f8fafc}
-    *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}.container{max-width:1480px;margin:0 auto;padding:24px}.topbar{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap}h1{margin:0 0 6px;font-size:28px;line-height:1.2}.sub{color:var(--muted);font-size:14px;line-height:1.6}.actions,.actions-secondary{display:flex;gap:10px;flex-wrap:wrap}button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600}button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}button.small{padding:8px 12px;font-size:13px}.warning{display:none;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);padding:14px 16px;border-radius:12px;margin-bottom:16px;font-size:14px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tab{background:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600}.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}.tab-panel{display:none}.tab-panel.active{display:block}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}.card-title{font-size:18px;font-weight:700;margin:0}.grid{display:grid;gap:14px}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.field{display:flex;flex-direction:column;gap:6px}label{font-size:13px;color:var(--muted);font-weight:600}input,select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px;color:var(--text)}.summary-box{border:1px solid var(--border);background:var(--soft);border-radius:14px;padding:14px}.summary-box .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}.summary-box .value{font-size:24px;font-weight:700;margin-top:8px}.line-items{display:flex;flex-direction:column;gap:10px}.line-row{display:grid;gap:10px;align-items:end;border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}.line-row.products{grid-template-columns:2fr 1fr 1fr 1fr auto}.line-row.salaries{grid-template-columns:2fr 1fr 1fr 1fr auto}.line-row.expenses{grid-template-columns:2fr 1fr 1fr auto}.line-row.startup{grid-template-columns:2fr 1fr auto}.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}.metric{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}.metric .m-label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}.metric .m-value{margin-top:10px;font-size:28px;font-weight:700}.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}.chart-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;min-height:360px;box-shadow:0 1px 2px rgba(15,23,42,.04)}.chart-card canvas{width:100%!important;height:280px!important}.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px;background:#fff}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{border-bottom:1px solid var(--border);padding:10px 12px;text-align:left;font-size:14px;vertical-align:middle;white-space:nowrap}th{background:#f8fafc;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}td:first-child,th:first-child{position:sticky;left:0;background:inherit;z-index:1}td:first-child{background:#fff;font-weight:600}.statement-highlight td{background:var(--highlight);font-weight:700}.statement-positive{color:var(--success);font-weight:700}.statement-negative{color:var(--danger);font-weight:700}.edit-cell{width:110px;padding:8px 10px;font-size:13px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap}.section-title h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.badge{display:inline-block;background:var(--soft);border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}.mini-list{display:flex;flex-direction:column;gap:10px}.mini-item{display:flex;justify-content:space-between;gap:16px;padding:12px;border:1px solid var(--border);border-radius:12px}.mini-item .left{color:var(--muted);font-size:14px}.mini-item .right{font-weight:700}.danger{color:var(--danger)}.success{color:var(--success)}@media (max-width:1100px){.grid-4,.metric-grid,.chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.line-row.products,.line-row.salaries,.line-row.expenses,.line-row.startup{grid-template-columns:1fr}}@media (max-width:700px){.grid-4,.grid-2,.metric-grid,.chart-grid{grid-template-columns:1fr}.container{padding:16px}}
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --primary: #0f172a;
+      --success: #10b981;
+      --danger: #ef4444;
+      --indigo: #4f46e5;
+    }
+    * { box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; padding-bottom: 50px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    
+    .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 20px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 800; color: var(--primary); }
+    .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    .actions { display: flex; gap: 10px; }
+    button { border: 1px solid var(--border); background: var(--card); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+    button:hover { background: #f8fafc; border-color: var(--muted); }
+    button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    button.danger-btn { color: var(--danger); border-color: #fecaca; }
+
+    .warning { display: none; background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; }
+
+    .tabs { display: flex; gap: 6px; background: #e2e8f0; padding: 4px; border-radius: 10px; margin-bottom: 24px; width: fit-content; }
+    .tab { border: none; background: transparent; padding: 8px 18px; border-radius: 7px; font-weight: 600; color: var(--muted); cursor: pointer; }
+    .tab.active { background: var(--card); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .card-title { font-size: 16px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .grid { display: grid; gap: 16px; }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: 12px; font-weight: 700; color: var(--muted); }
+    input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    
+    .line-row { display: grid; gap: 12px; align-items: end; border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #fff; margin-bottom: 10px; }
+    .line-row.products { grid-template-columns: 2fr 1fr 1fr 1fr auto; }
+    .line-row.salaries { grid-template-columns: 2fr 1fr 1fr auto; }
+    .line-row.expenses { grid-template-columns: 2fr 1fr 1fr auto; }
+    .line-row.startup { grid-template-columns: 2.5fr 1fr auto; }
+
+    .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .metric { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .metric .m-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .metric .m-value { margin-top: 6px; font-size: 24px; font-weight: 800; color: var(--primary); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    th, td { padding: 12px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; font-weight: 700; color: var(--muted); font-size: 11px; text-transform: uppercase; }
+    td:first-child { font-weight: 600; position: sticky; left: 0; background: #fff; border-right: 2px solid var(--border); }
+    .row-total { background: #f1f5f9; font-weight: 700; }
+    .neg { color: var(--danger); }
+    .pos { color: var(--success); }
+
+    @media (max-width: 900px) { .grid-4, .metric-grid { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
 <body>
+
 <div class="container">
-  <div class="topbar">
+  <div class="header">
     <div>
-      <h1>Financial Projection Pro (SA)</h1>
-      <div class="sub">Advanced business planning with Scenario Analysis, SBC Tax scaling, and VAT support.</div>
+      <h1 id="dispName">Business Projection</h1>
+      <div class="sub">South African Compliance Engine (SBC Tax & VAT)</div>
     </div>
-    <div>
-      <div class="actions">
-        <button id="exportProjectBtn">Export Project File</button>
-        <button id="importProjectBtn">Import Project File</button>
-        <input id="importProjectInput" type="file" accept="application/json,.json" style="display:none;">
-      </div>
-      <div class="actions-secondary" style="margin-top:10px;">
-        <button class="primary" id="exportExcelBtn">Export Professional Excel</button>
-      </div>
+    <div class="actions">
+      <button onclick="exportFile()">Save Project</button>
+      <button onclick="document.getElementById('fileIn').click()">Load Project</button>
+      <button class="primary" onclick="exportExcel()">Export Professional Excel</button>
+      <input type="file" id="fileIn" style="display:none" onchange="importFile(event)">
     </div>
   </div>
 
-  <div class="warning" id="negativeCashWarning">⚠️ Closing cash falls below zero. Adjust assumptions to ensure sustainability.</div>
+  <div class="warning" id="warn">⚠️ Warning: Cash balance falls below zero in the forecast.</div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="setup">Setup</button>
-    <button class="tab" data-tab="sales">Sales</button>
-    <button class="tab" data-tab="salaries">Salaries</button>
-    <button class="tab" data-tab="expenses">Expenses</button>
-    <button class="tab" data-tab="startup">Startup</button>
-    <button class="tab" data-tab="outputs">Dashboard</button>
+    <button class="tab active" onclick="setTab('setup', this)">Setup</button>
+    <button class="tab" onclick="setTab('revenue', this)">Revenue</button>
+    <button class="tab" onclick="setTab('team', this)">Team</button>
+    <button class="tab" onclick="setTab('costs', this)">Operating Costs</button>
+    <button class="tab" onclick="setTab('startup', this)">Startup</button>
+    <button class="tab" onclick="setTab('dash', this)">Dashboard</button>
   </div>
 
-  <div class="tab-panel active" id="tab-setup">
+  <div id="tab-setup" class="tab-panel active">
     <div class="card">
-        <div class="card-head"><h2 class="card-title">Core Business Setup</h2></div>
-        <div class="grid grid-4">
-            <div class="field"><label>Business Name</label><input id="businessName" type="text" /></div>
-            <div class="field"><label>Projection Type</label><select id="projectionMode"><option value="12">12-Month Projection</option><option value="60">5-Year Projection</option></select></div>
-            <div class="field"><label>Financial Start Month</label><select id="startMonth"></select></div>
-            <div class="field"><label>Opening Cash</label><input id="openingCash" type="number" /></div>
-            <div class="field"><label>Scenario</label><select id="scenarioMode"><option value="base">Base Case (100%)</option><option value="pessimistic">Pessimistic (80% Rev, 110% COS)</option><option value="optimistic">Optimistic (120% Rev, 90% COS)</option></select></div>
-            <div class="field"><label>VAT Registered (15%)</label><select id="isVatRegistered"><option value="no">No</option><option value="yes">Yes</option></select></div>
-            <div class="field"><label>Tax Type (SA)</label><select id="taxType"><option value="standard">Standard Corporate (27%)</option><option value="sbc">Small Business Corp (SBC)</option></select></div>
-            <div class="field"><label>Cash Gap / DSO (Days)</label><input id="dsoDays" type="number" value="0" placeholder="e.g. 30" /></div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-head"><h2 class="card-title">Funding & Growth</h2></div>
-        <div class="grid grid-4">
-            <div class="field"><label>Owner Contribution</label><input id="ownerContribution" type="number" /></div>
-            <div class="field"><label>Loan Amount</label><input id="loanAmount" type="number" /></div>
-            <div class="field"><label>Loan Term (Months)</label><input id="loanTermMonths" type="number" /></div>
-            <div class="field"><label>Annual Interest %</label><input id="annualInterestRate" type="number" step="0.01" /></div>
-            <div class="field"><label>Target Annual Sales Growth %</label><input id="salesGrowthAnnual" type="number" step="0.01" /></div>
-            <div class="summary-box"><div class="label">Monthly Loan Repayment</div><div class="value" id="loanRepaymentValue">R 0</div></div>
-        </div>
-    </div>
-  </div>
-
-  <div class="tab-panel" id="tab-sales">
-      <div class="card"><div class="card-head"><h2 class="card-title">Revenue Streams</h2><button class="small" id="addProductBtn">+ Add Product</button></div><div class="line-items" id="productsContainer"></div></div>
-  </div>
-  <div class="tab-panel" id="tab-salaries">
-      <div class="card"><div class="card-head"><h2 class="card-title">Staff & Payroll</h2><button class="small" id="addSalaryBtn">+ Add Role</button></div><div class="line-items" id="salariesContainer"></div></div>
-  </div>
-  <div class="tab-panel" id="tab-expenses">
-      <div class="card"><div class="card-head"><h2 class="card-title">Operating Costs</h2><button class="small" id="addExpenseBtn">+ Add Expense</button></div><div class="line-items" id="expensesContainer"></div></div>
-  </div>
-  <div class="tab-panel" id="tab-startup">
-      <div class="grid grid-2">
-          <div class="card"><div class="card-head"><h2 class="card-title">Startup Capital Expenditures</h2><button class="small" id="addStartupBtn">+ Add Cost</button></div><div class="line-items" id="startupContainer"></div></div>
-          <div class="card"><div class="card-head"><h2 class="card-title">Funding Sufficiency</h2></div><div class="mini-list" id="fundingSummaryList"></div></div>
+      <div class="card-title">General Config</div>
+      <div class="grid grid-4" style="margin-top:15px">
+        <div class="field"><label>Business Name</label><input type="text" id="businessName" oninput="up('businessName', this.value)"></div>
+        <div class="field"><label>Tax Type</label><select id="taxType" onchange="up('taxType', this.value)"><option value="std">Standard Corporate (27%)</option><option value="sbc">Small Business Corp (SBC)</option></select></div>
+        <div class="field"><label>VAT Registered?</label><select id="isVat" onchange="up('isVat', this.value)"><option value="no">No</option><option value="yes">Yes (15%)</option></select></div>
+        <div class="field"><label>Cash Gap (Days)</label><input type="number" id="dso" oninput="up('dso', this.value)" placeholder="e.g. 30"></div>
+        <div class="field"><label>Scenario</label><select id="scenario" onchange="up('scenario', this.value)"><option value="1">Base Case (100%)</option><option value="0.8">Pessimistic (80%)</option><option value="1.2">Optimistic (120%)</option></select></div>
+        <div class="field"><label>Start Month</label><select id="startMonth" onchange="up('startMonth', this.value)"></select></div>
+        <div class="field"><label>Opening Cash</label><input type="number" id="openingCash" oninput="up('openingCash', this.value)"></div>
+        <div class="field"><label>Owner Funds</label><input type="number" id="ownerContribution" oninput="up('ownerContribution', this.value)"></div>
       </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Loan Details</div>
+      <div class="grid grid-4" style="margin-top:15px">
+        <div class="field"><label>Loan Amount</label><input type="number" id="loanAmount" oninput="up('loanAmount', this.value)"></div>
+        <div class="field"><label>Interest Rate %</label><input type="number" id="loanRate" oninput="up('loanRate', this.value)"></div>
+        <div class="field"><label>Term (Months)</label><input type="number" id="loanTerm" oninput="up('loanTerm', this.value)"></div>
+        <div class="metric"><div class="m-label">Monthly Payment</div><div class="m-value" style="font-size:18px" id="dispLoan">R 0</div></div>
+      </div>
+    </div>
   </div>
 
-  <div class="tab-panel" id="tab-outputs">
-    <div class="metric-grid">
-        <div class="metric"><div class="m-label">Total Revenue</div><div class="m-value" id="metricRevenue">R 0</div></div>
-        <div class="metric"><div class="m-label">Projected Runway (Avg)</div><div class="m-value" id="metricRunway">0 Months</div></div>
-        <div class="metric"><div class="m-label">Current Ratio (Liquidity)</div><div class="m-value" id="metricLiquidity">0.0</div></div>
-        <div class="metric"><div class="m-label">Total Jobs Created</div><div class="m-value" id="metricHeadcount">0</div></div>
+  <div id="tab-revenue" class="tab-panel">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Revenue Streams</div><button class="primary" onclick="addItem('products')">+ Add Product</button></div>
+      <div id="cont-products"></div>
     </div>
-    <div class="chart-grid">
-        <div class="chart-card"><div class="card-head"><h2 class="card-title">Profitability Analysis</h2></div><canvas id="revenueProfitChart"></canvas></div>
-        <div class="chart-card"><div class="card-head"><h2 class="card-title">Cash Flow Position</h2></div><canvas id="cashChart"></canvas></div>
-    </div>
-    <div class="card"><div class="card-head"><h2 class="card-title">Income Statement (Net of VAT)</h2></div><div class="table-wrap" id="incomeStatementTable"></div></div>
-    <div class="card"><div class="card-head"><h2 class="card-title">Cash Flow Statement (Inc. VAT Effect)</h2></div><div class="table-wrap" id="cashFlowTable"></div></div>
-    <div class="card"><div class="card-head"><h2 class="card-title">Operational Ratios</h2></div><div class="mini-list" id="ratioSummaryList"></div></div>
   </div>
+
+  <div id="tab-team" class="tab-panel">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Payroll</div><button class="primary" onclick="addItem('salaries')">+ Add Role</button></div>
+      <div id="cont-salaries"></div>
+    </div>
+  </div>
+
+  <div id="tab-costs" class="tab-panel">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Operating Expenses</div><button class="primary" onclick="addItem('expenses')">+ Add Expense</button></div>
+      <div id="cont-expenses"></div>
+    </div>
+  </div>
+
+  <div id="tab-startup" class="tab-panel">
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-head"><div class="card-title">Capital Outlay</div><button class="primary" onclick="addItem('startup')">+ Add Item</button></div>
+        <div id="cont-startup"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Funding Summary</div>
+        <div id="fundingList" style="margin-top:20px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-dash" class="tab-panel">
+    <div class="metric-grid" id="dashMetrics"></div>
+    <div class="card"><div class="card-title">Income Statement (Profit & Loss)</div><div class="table-wrap" id="tableIncome"></div></div>
+    <div class="card"><div class="card-title">Cash Flow Statement</div><div class="table-wrap" id="tableCash"></div></div>
+  </div>
+
 </div>
 
 <script>
-const monthNames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const charts={};
-const state = {
-    setup: { businessName: "New Business", projectionMode: "12", startMonth: 0, openingCash: 0, scenarioMode: "base", isVatRegistered: "no", taxType: "standard", dsoDays: 0, ownerContribution: 0, loanAmount: 0, loanTermMonths: 60, annualInterestRate: 12, salesGrowthAnnual: 8 },
-    products: [{ id: uid(), name: "Primary Revenue", price: 1000, unitsPerMonth: 20, costPerUnit: 400 }],
-    salaries: [{ id: uid(), role: "Founder", people: 1, monthlySalary: 15000, presalesMonths: 0 }],
-    expenses: [{ id: uid(), name: "Office Rent", monthlyAmount: 8000, annualIncrease: 5 }],
-    startupCosts: [{ id: uid(), name: "Equip & Setup", amount: 20000 }],
-    overrides: {}
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+let state = {
+  setup: { businessName: "My Venture", taxType: "std", isVat: "no", dso: 0, scenario: 1, startMonth: 0, openingCash: 0, ownerContribution: 0, loanAmount: 0, loanRate: 12, loanTerm: 60 },
+  products: [{ id: Math.random(), name: "Main Product", price: 1500, units: 10, cos: 300 }],
+  salaries: [{ id: Math.random(), name: "Manager", count: 1, monthly: 20000 }],
+  expenses: [{ id: Math.random(), name: "Marketing", amount: 5000, growth: 5 }],
+  startup: [{ id: Math.random(), name: "Equipment", amount: 25000 }]
 };
 
-function uid(){ return Math.random().toString(36).slice(2,9); }
-function n(v){ const x=Number(v); return Number.isFinite(x)?x:0; }
-function rand(value){ return new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR',maximumFractionDigits:0}).format(n(value)); }
+function up(key, val) { state.setup[key] = val; render(); }
+function n(v) { return parseFloat(v) || 0; }
+function rand(v) { return "R " + n(v).toLocaleString('en-ZA', { maximumFractionDigits: 0 }); }
 
-function calculateSBCTax(taxableIncome) {
-    if (taxableIncome <= 0) return 0;
-    if (taxableIncome <= 95000) return 0;
-    if (taxableIncome <= 365000) return (taxableIncome - 95000) * 0.07;
-    if (taxableIncome <= 550000) return 18900 + (taxableIncome - 365000) * 0.21;
-    return 57750 + (taxableIncome - 550000) * 0.27;
+function addItem(type) {
+  const blueprints = {
+    products: { id: Math.random(), name: "New Product", price: 0, units: 0, cos: 0 },
+    salaries: { id: Math.random(), name: "New Role", count: 1, monthly: 0 },
+    expenses: { id: Math.random(), name: "New Expense", amount: 0, growth: 0 },
+    startup: { id: Math.random(), name: "New Asset", amount: 0 }
+  };
+  state[type].push(blueprints[type]);
+  render();
 }
 
-function computeProjection() {
-    const p = {};
-    p.periods = [];
-    const sm = n(state.setup.startMonth);
-    for(let i=0; i<12; i++) p.periods.push({key:`M${i+1}`, label:`${monthNames[(sm+i)%12]} Y1`, type:'month', idx:i});
-    if(state.setup.projectionMode==='60') for(let y=2;y<=5;y++) p.periods.push({key:`Y${y}`, label:`Year ${y}`, type:'year', yIdx:y});
+function removeItem(type, id) { state[type] = state[type].filter(x => x.id !== id); render(); }
 
-    const scenario = state.setup.scenarioMode;
-    const revMult = scenario==='pessimistic' ? 0.8 : (scenario==='optimistic' ? 1.2 : 1);
-    const cosMult = scenario==='pessimistic' ? 1.1 : (scenario==='optimistic' ? 0.9 : 1);
-    const vat = state.setup.isVatRegistered === 'yes' ? 1.15 : 1;
-    const dsoMonths = Math.min(2, Math.floor(n(state.setup.dsoDays) / 30));
+function updateItem(type, id, key, val) {
+  let item = state[type].find(x => x.id === id);
+  if (item) item[key] = val;
+  render();
+}
 
-    p.revenueRows = state.products.map(pr => ({
-        key: `rev_${pr.id}`, name: pr.name, 
-        values: p.periods.map(per => {
-            const base = n(pr.price) * n(pr.unitsPerMonth) * revMult;
-            return per.type==='month' ? base : base * 12 * Math.pow(1+n(state.setup.salesGrowthAnnual)/100, per.yIdx-1);
-        })
-    }));
+function calculate() {
+  const p = { periods: [] };
+  const sm = n(state.setup.startMonth);
+  const vat = state.setup.isVat === "yes" ? 1.15 : 1;
+  const dsoMonths = Math.min(2, Math.floor(n(state.setup.dso) / 30));
+  const sc = n(state.setup.scenario);
 
-    p.cosRows = state.products.map(pr => ({
-        key: `cos_${pr.id}`, name: pr.name, 
-        values: p.periods.map(per => {
-            const base = n(pr.costPerUnit) * n(pr.unitsPerMonth) * cosMult;
-            return per.type==='month' ? base : base * 12 * Math.pow(1+n(state.setup.salesGrowthAnnual)/100, per.yIdx-1);
-        })
-    }));
+  for(let i=0; i<12; i++) p.periods.push({ label: `${months[(sm+i)%12]} Y1`, type: 'm' });
 
-    p.salaryRows = state.salaries.map(s => ({
-        key: `sal_${s.id}`, name: s.role,
-        values: p.periods.map(per => per.type==='month' ? n(s.people)*n(s.monthlySalary) : n(s.people)*n(s.monthlySalary)*12)
-    }));
+  p.rev = p.periods.map(() => state.products.reduce((s, x) => s + (n(x.price) * n(x.units) * sc), 0));
+  p.cos = p.periods.map(() => state.products.reduce((s, x) => s + (n(x.cos) * n(x.units)), 0));
+  p.sal = p.periods.map(() => state.salaries.reduce((s, x) => s + (n(x.count) * n(x.monthly)), 0));
+  p.opex = p.periods.map(() => state.expenses.reduce((s, x) => s + n(x.amount), 0));
 
-    p.expenseRows = state.expenses.map(e => ({
-        key: `exp_${e.id}`, name: e.name,
-        values: p.periods.map(per => {
-            const base = n(e.monthlyAmount);
-            return per.type==='month' ? base : base * 12 * Math.pow(1+n(e.annualIncrease)/100, per.yIdx-1);
-        })
-    }));
+  const loanP = (()=>{
+    const amt = n(state.setup.loanAmount), r = n(state.setup.loanRate)/100/12, t = n(state.setup.loanTerm);
+    if(!amt || !t) return 0; if(!r) return amt/t;
+    return (amt * r) / (1 - Math.pow(1 + r, -t));
+  })();
 
-    // Logic: Sums
-    p.totalRevenue = p.periods.map((per, i) => p.revenueRows.reduce((s, r) => s + (state.overrides[r.key]?.[per.key] ?? r.values[i]), 0));
-    p.totalCOS = p.periods.map((per, i) => p.cosRows.reduce((s, r) => s + r.values[i], 0));
-    p.totalSalaries = p.periods.map((per, i) => p.salaryRows.reduce((s, r) => s + r.values[i], 0));
-    p.totalExpenses = p.periods.map((per, i) => p.expenseRows.reduce((s, r) => s + r.values[i], 0));
-    
-    // Tax Scaling
-    p.operatingProfit = p.totalRevenue.map((v, i) => v - p.totalCOS[i] - p.totalSalaries[i] - p.totalExpenses[i]);
-    p.tax = p.operatingProfit.map(v => {
-        if (v <= 0) return 0;
-        return state.setup.taxType === 'sbc' ? calculateSBCTax(v) : v * 0.27;
-    });
-    p.netProfit = p.operatingProfit.map((v, i) => v - p.tax[i]);
+  p.loanRepay = loanP;
+  p.startupTotal = state.startup.reduce((s, x) => s + n(x.amount), 0);
+  
+  // Income Statement Logic (Net of VAT)
+  p.ebit = p.rev.map((v, i) => v - p.cos[i] - p.sal[i] - p.opex[i]);
+  p.tax = p.ebit.map(v => {
+    if (v <= 0) return 0;
+    if (state.setup.taxType === 'std') return v * 0.27;
+    // SBC Sliding Scale (Simplified)
+    if (v <= 95000) return 0;
+    if (v <= 365000) return (v - 95000) * 0.07;
+    return 18900 + (v - 365000) * 0.21;
+  });
 
-    // Cash Flow (Inc. VAT and DSO)
-    p.startupTotal = state.startupCosts.reduce((s,c)=>s+n(c.amount),0);
-    p.cashFlows = [];
-    let currentCash = n(state.setup.openingCash) + n(state.setup.ownerContribution) + n(state.setup.loanAmount) - p.startupTotal;
-    
-    p.periods.forEach((per, i) => {
-        const opening = currentCash;
-        // Inflow delay logic (DSO)
-        let inflow = 0;
-        if (dsoMonths === 0) inflow = p.totalRevenue[i] * vat;
-        else if (i >= dsoMonths) inflow = p.totalRevenue[i - dsoMonths] * vat;
-        
-        const outflow = (p.totalCOS[i] + p.totalSalaries[i] + p.totalExpenses[i]) * vat;
-        const closing = opening + inflow - outflow;
-        p.cashFlows.push({ opening, inflow, outflow, closing });
-        currentCash = closing;
-    });
+  // Cash Flow logic (Includes VAT and DSO)
+  p.cash = [];
+  let current = n(state.setup.openingCash) + n(state.setup.ownerContribution) + n(state.setup.loanAmount) - p.startupTotal;
+  
+  p.periods.forEach((_, i) => {
+    const opening = current;
+    let inflow = (dsoMonths === 0 || i < dsoMonths) ? p.rev[i] : p.rev[i - dsoMonths];
+    inflow *= vat;
+    const outflow = (p.cos[i] + p.sal[i] + p.opex[i]) * vat + loanP;
+    const closing = opening + inflow - outflow;
+    p.cash.push({ opening, inflow, outflow, closing });
+    current = closing;
+  });
 
-    p.headcount = state.salaries.reduce((s, r) => s + n(r.people), 0);
-    p.loanP = (()=>{
-        const p_l=n(state.setup.loanAmount), r=n(state.setup.annualInterestRate)/100/12, m=n(state.setup.loanTermMonths);
-        if(!p_l || !m) return 0; if(!r) return p_l/m;
-        return (p_l*r)/(1-Math.pow(1+r,-m));
-    })();
-
-    return p;
+  return p;
 }
 
 function render() {
-    const p = computeProjection();
-    document.getElementById('loanRepaymentValue').textContent = rand(p.loanP);
-    document.getElementById('metricRevenue').textContent = rand(p.totalRevenue.reduce((a,b)=>a+b,0));
-    document.getElementById('metricHeadcount').textContent = p.headcount;
-    document.getElementById('metricLiquidity').textContent = ((p.cashFlows[0].opening + p.startupTotal) / Math.max(1, n(state.setup.loanAmount))).toFixed(2);
-    
-    document.getElementById('negativeCashWarning').style.display = p.cashFlows.some(x=>x.closing<0)?'block':'none';
+  const p = calculate();
+  document.getElementById('dispName').innerText = state.setup.businessName || "Business Projection";
+  document.getElementById('dispLoan').innerText = rand(p.loanRepay);
+  document.getElementById('warn').style.display = p.cash.some(x => x.closing < 0) ? "block" : "none";
 
-    renderInputs();
-    renderCharts(p);
-    
-    renderStatement('incomeStatementTable', p.periods, [
-        {name:'Revenue', values:p.totalRevenue},
-        {name:'Cost of Sales', values:p.totalCOS.map(v=>-v)},
-        {name:'Operating Expenses', values:p.totalExpenses.map(v=>-v + -p.totalSalaries[i])},
-        {name:'Taxation', values:p.tax.map(v=>-v)},
-        {name:'Net Profit After Tax', values:p.netProfit}
-    ]);
+  // Render Setup Select
+  const smEl = document.getElementById('startMonth');
+  if (!smEl.innerHTML) smEl.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+  
+  // Sync Setup Inputs
+  Object.keys(state.setup).forEach(k => {
+    const el = document.getElementById(k);
+    if(el) el.value = state.setup[k];
+  });
 
-    renderStatement('cashFlowTable', p.periods, [
-        {name:'Opening Cash', values:p.cashFlows.map(x=>x.opening)},
-        {name:'Cash Receipts (Inc VAT/DSO)', values:p.cashFlows.map(x=>x.inflow)},
-        {name:'Cash Payments', values:p.cashFlows.map(x=>-x.outflow)},
-        {name:'Closing Cash Balance', values:p.cashFlows.map(x=>x.closing)}
-    ]);
+  // Render Product Rows
+  document.getElementById('cont-products').innerHTML = state.products.map(x => `
+    <div class="line-row products">
+      <div class="field"><label>Item Name</label><input type="text" value="${x.name}" oninput="updateItem('products','${x.id}','name',this.value)"></div>
+      <div class="field"><label>Price (R)</label><input type="number" value="${x.price}" oninput="updateItem('products','${x.id}','price',this.value)"></div>
+      <div class="field"><label>Units/Mo</label><input type="number" value="${x.units}" oninput="updateItem('products','${x.id}','units',this.value)"></div>
+      <div class="field"><label>Unit Cost (R)</label><input type="number" value="${x.cos}" oninput="updateItem('products','${x.id}','cos',this.value)"></div>
+      <button class="danger-btn" onclick="removeItem('products','${x.id}')">Delete</button>
+    </div>
+  `).join('');
 
-    document.getElementById('fundingSummaryList').innerHTML = `
-        <div class="mini-item"><div class="left">Startup Requirements</div><div class="right">${rand(p.startupTotal)}</div></div>
-        <div class="mini-item"><div class="left">Total Funding</div><div class="right">${rand(n(state.setup.ownerContribution)+n(state.setup.loanAmount))}</div></div>
-    `;
-}
+  // Render Salary Rows
+  document.getElementById('cont-salaries').innerHTML = state.salaries.map(x => `
+    <div class="line-row salaries">
+      <div class="field"><label>Role</label><input type="text" value="${x.name}" oninput="updateItem('salaries','${x.id}','name',this.value)"></div>
+      <div class="field"><label>Headcount</label><input type="number" value="${x.count}" oninput="updateItem('salaries','${x.id}','count',this.value)"></div>
+      <div class="field"><label>Monthly Salary (R)</label><input type="number" value="${x.monthly}" oninput="updateItem('salaries','${x.id}','monthly',this.value)"></div>
+      <button class="danger-btn" onclick="removeItem('salaries','${x.id}')">Delete</button>
+    </div>
+  `).join('');
 
-function renderInputs() {
-    ['businessName','projectionMode','startMonth','openingCash','scenarioMode','isVatRegistered','taxType','dsoDays','ownerContribution','loanAmount','loanTermMonths','annualInterestRate','salesGrowthAnnual'].forEach(id => {
-        const el = document.getElementById(id); if(el) el.value = state.setup[id];
-    });
+  // Render Expense Rows
+  document.getElementById('cont-expenses').innerHTML = state.expenses.map(x => `
+    <div class="line-row expenses">
+      <div class="field"><label>Expense Category</label><input type="text" value="${x.name}" oninput="updateItem('expenses','${x.id}','name',this.value)"></div>
+      <div class="field"><label>Monthly Amount (R)</label><input type="number" value="${x.amount}" oninput="updateItem('expenses','${x.id}','amount',this.value)"></div>
+      <div class="field"><label>Annual Growth %</label><input type="number" value="${x.growth}" oninput="updateItem('expenses','${x.id}','growth',this.value)"></div>
+      <button class="danger-btn" onclick="removeItem('expenses','${x.id}')">Delete</button>
+    </div>
+  `).join('');
 
-    const sm = document.getElementById('startMonth');
-    if(!sm.options.length) sm.innerHTML = monthNames.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  // Render Startup Rows
+  document.getElementById('cont-startup').innerHTML = state.startup.map(x => `
+    <div class="line-row startup">
+      <div class="field"><label>Asset/Description</label><input type="text" value="${x.name}" oninput="updateItem('startup','${x.id}','name',this.value)"></div>
+      <div class="field"><label>Amount (R)</label><input type="number" value="${x.amount}" oninput="updateItem('startup','${x.id}','amount',this.value)"></div>
+      <button class="danger-btn" onclick="removeItem('startup','${x.id}')">Delete</button>
+    </div>
+  `).join('');
 
-    document.getElementById('productsContainer').innerHTML = state.products.map((x,i)=>`
-        <div class="line-row products">
-            <div class="field"><label>Item</label><input value="${x.name}" oninput="state.products[${i}].name=this.value"></div>
-            <div class="field"><label>Price</label><input type="number" value="${x.price}" oninput="state.products[${i}].price=this.value;render()"></div>
-            <div class="field"><label>Units/Mo</label><input type="number" value="${x.unitsPerMonth}" oninput="state.products[${i}].unitsPerMonth=this.value;render()"></div>
-            <div class="field"><label>Cost/Unit</label><input type="number" value="${x.costPerUnit}" oninput="state.products[${i}].costPerUnit=this.value;render()"></div>
-            <button class="small" onclick="state.products.splice(${i},1);render()">Remove</button>
-        </div>
-    `).join('');
-    // Note: Similar render functions for Salaries, Expenses, Startup omitted for brevity but follow the same pattern as products.
+  // Funding Summary
+  const funded = n(state.setup.ownerContribution) + n(state.setup.loanAmount);
+  document.getElementById('fundingList').innerHTML = `
+    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee"><span>Capital Required:</span><b>${rand(p.startupTotal)}</b></div>
+    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee"><span>Total Funding:</span><b>${rand(funded)}</b></div>
+    <div style="display:flex; justify-content:space-between; padding:10px 0; font-weight:800; color:${funded >= p.startupTotal ? 'green' : 'red'}"><span>Funding Gap:</span><span>${rand(funded - p.startupTotal)}</span></div>
+  `;
+
+  // Dash Metrics
+  document.getElementById('dashMetrics').innerHTML = `
+    <div class="metric"><div class="m-label">Total Annual Sales</div><div class="m-value">${rand(p.rev.reduce((a,b)=>a+b,0))}</div></div>
+    <div class="metric"><div class="m-label">Net Profit (Year 1)</div><div class="m-value">${rand(p.ebit.reduce((a,b)=>a+b,0) - p.tax.reduce((a,b)=>a+b,0))}</div></div>
+    <div class="metric"><div class="m-label">Closing Cash</div><div class="m-value">${rand(p.cash[11].closing)}</div></div>
+    <div class="metric"><div class="m-label">Avg. Monthly Burn</div><div class="m-value">${rand(p.cash[0].outflow)}</div></div>
+  `;
+
+  renderStatement('tableIncome', p.periods, [
+    { n: "Revenue", v: p.rev },
+    { n: "Cost of Sales", v: p.cos.map(v => -v) },
+    { n: "Salaries", v: p.sal.map(v => -v) },
+    { n: "Operating Expenses", v: p.opex.map(v => -v) },
+    { n: "Taxation", v: p.tax.map(v => -v) },
+    { n: "NET PROFIT", v: p.ebit.map((v, i) => v - p.tax[i]), bold: true }
+  ]);
+
+  renderStatement('tableCash', p.periods, [
+    { n: "Opening Cash", v: p.cash.map(x => x.opening) },
+    { n: "Total Inflows", v: p.cash.map(x => x.inflow) },
+    { n: "Total Outflows", v: p.cash.map(x => x.outflow * -1) },
+    { n: "CLOSING BALANCE", v: p.cash.map(x => x.closing), bold: true }
+  ]);
+  
+  localStorage.setItem('sa_proj_v6', JSON.stringify(state));
 }
 
 function renderStatement(id, periods, rows) {
-    let h = `<table><thead><tr><th>Line Item</th>${periods.map(x=>`<th>${x.label}</th>`).join('')}</tr></thead><tbody>`;
-    rows.forEach(r => {
-        const isBold = r.name.includes('Net Profit') || r.name.includes('Closing');
-        h += `<tr class="${isBold?'statement-highlight':''}"><td>${r.name}</td>`;
-        r.values.forEach(v => h += `<td class="${v<0?'statement-negative':(v>0&&isBold?'statement-positive':'')}">${rand(v)}</td>`);
-        h += `</tr>`;
-    });
-    document.getElementById(id).innerHTML = h + `</tbody></table>`;
+  let h = `<table><thead><tr><th>Category</th>${periods.map(x => `<th>${x.label}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(r => {
+    h += `<tr class="${r.bold?'row-total':''}"><td>${r.n}</td>`;
+    r.v.forEach(val => h += `<td class="${val < 0 ? 'neg' : (val > 0 && r.bold ? 'pos' : '')}">${rand(val)}</td>`);
+    h += `</tr>`;
+  });
+  document.getElementById(id).innerHTML = h + `</tbody></table>`;
 }
 
-function renderCharts(p) {
-    const labels = p.periods.map(x=>x.label);
-    if(charts.rev) charts.rev.destroy();
-    charts.rev = new Chart(document.getElementById('revenueProfitChart'), {
-        type:'bar', data: { labels, datasets: [{label:'Revenue', data:p.totalRevenue, backgroundColor:'#0f172a'}] }
-    });
-    if(charts.cash) charts.cash.destroy();
-    charts.cash = new Chart(document.getElementById('cashChart'), {
-        type:'line', data: { labels, datasets: [{label:'Cash', data:p.cashFlows.map(x=>x.closing), borderColor:'#166534', fill:false}] }
-    });
+function setTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  render();
 }
 
-// EXCEL EXPORT (Comprehensive Version)
+// PERSISTENCE
+function exportFile() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${state.setup.businessName}.json`; a.click();
+}
+function importFile(e) {
+  const reader = new FileReader();
+  reader.onload = (ev) => { state = JSON.parse(ev.target.result); render(); };
+  reader.readAsText(e.target.files[0]);
+}
+
+// EXCEL EXPORT
 function exportExcel() {
-    const p = computeProjection();
-    const wb = XLSX.utils.book_new();
+  const p = calculate();
+  const wb = XLSX.utils.book_new();
 
-    const makeSheet = (subtitle, rows, totalRows = []) => {
-        const data = [[state.setup.businessName], [subtitle], rows[0], ...rows.slice(1)];
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        const lastCol = Math.max(1, data[2].length - 1);
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } }, { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } }];
-        
-        // Simple apply styles logic
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        ws['!cols'] = [{ wch: 30 }, ...Array(range.e.c).fill({ wch: 15 })];
-        for(let r=range.s.r; r<=range.e.r; r++){
-            for(let c=range.s.c; c<=range.e.c; c++){
-                const ref = XLSX.utils.encode_cell({r,c});
-                if(!ws[ref]) continue;
-                ws[ref].s = { font:{name:'Arial', sz:10}, alignment:{horizontal:c===0?'left':'right'} };
-                if(r<2) ws[ref].s.font.bold = true;
-                if(c>0 && typeof ws[ref].v==='number') ws[ref].z = 'R #,##0';
-            }
-        }
-        return ws;
-    };
+  // Helper for sheets
+  const addSheet = (name, headerRow, dataRows) => {
+    const ws = XLSX.utils.aoa_to_sheet([[state.setup.businessName], [name], [], headerRow, ...dataRows]);
+    // Formatting
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    ws['!cols'] = [{ wch: 25 }, ...Array(12).fill({ wch: 12 })];
+    for (let r = 0; r <= range.e.r; r++) {
+      for (let c = 0; c <= range.e.c; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c })];
+        if (!cell) continue;
+        cell.s = { font: { name: "Arial", sz: 10 }, alignment: { horizontal: c === 0 ? "left" : "right" } };
+        if (r < 4) cell.s.font.bold = true;
+        if (c > 0 && typeof cell.v === 'number') cell.z = '"R "#,##0';
+      }
+    }
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  };
 
-    const startupRows = [['Item', 'Amount'], ...state.startupCosts.map(c=>[c.name, n(c.amount)]), ['Total', p.startupTotal]];
-    const salesRows = [['Item', ...p.periods.map(x=>x.label)], ...p.revenueRows.map((r,i)=>[r.name, ...r.values]), ['Total Revenue', ...p.totalRevenue]];
-    const incomeRows = [['Line Item', ...p.periods.map(x=>x.label)], ['Revenue', ...p.totalRevenue], ['Net Profit', ...p.netProfit]];
+  addSheet("Income Statement", ["Line Item", ...p.periods.map(x => x.label)], [
+    ["Revenue", ...p.rev], ["COS", ...p.cos], ["Salaries", ...p.sal], ["Expenses", ...p.opex], ["Tax", ...p.tax], ["Net Profit", ...p.ebit.map((v, i) => v - p.tax[i])]
+  ]);
+  addSheet("Cash Flow", ["Line Item", ...p.periods.map(x => x.label)], [
+    ["Receipts", ...p.cash.map(x => x.inflow)], ["Payments", ...p.cash.map(x => x.outflow)], ["Closing", ...p.cash.map(x => x.closing)]
+  ]);
+  addSheet("Startup Assets", ["Item", "Amount"], state.startup.map(x => [x.name, n(x.amount)]));
 
-    XLSX.utils.book_append_sheet(wb, makeSheet('Startup Budget', startupRows), 'Startup');
-    XLSX.utils.book_append_sheet(wb, makeSheet('Sales Forecast', salesRows), 'Sales');
-    XLSX.utils.book_append_sheet(wb, makeSheet('Income Statement', incomeRows), 'Income Statement');
-    
-    XLSX.writeFile(wb, `${state.setup.businessName}_Financials.xlsx`);
+  XLSX.writeFile(wb, `${state.setup.businessName}_Financials.xlsx`);
 }
 
-// Listeners
-document.querySelectorAll('.tab').forEach(btn => btn.onclick = () => {
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-});
-
-['businessName','projectionMode','startMonth','openingCash','scenarioMode','isVatRegistered','taxType','dsoDays','ownerContribution','loanAmount','loanTermMonths','annualInterestRate','salesGrowthAnnual'].forEach(id => {
-    document.getElementById(id).onchange = (e) => { state.setup[id] = e.target.value; render(); };
-});
-
-document.getElementById('exportExcelBtn').onclick = exportExcel;
-document.getElementById('addProductBtn').onclick = () => { state.products.push({id:uid(), name:"New Item", price:0, unitsPerMonth:0, costPerUnit:0}); render(); };
-
+// Init
+const saved = localStorage.getItem('sa_proj_v6');
+if (saved) state = JSON.parse(saved);
 render();
 </script>
 </body>
