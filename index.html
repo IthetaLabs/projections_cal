@@ -1,417 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Financial Projection Pro (SA Edition)</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root {
-      --bg: #f1f5f9;
-      --card: #ffffff;
-      --border: #e2e8f0;
-      --text: #1e293b;
-      --muted: #64748b;
-      --primary: #0f172a;
-      --success: #10b981;
-      --danger: #ef4444;
-      --indigo: #4f46e5;
-    }
-    * { box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; padding-bottom: 50px; }
-    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iTheta Labs - Financial Planning Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 20px; }
-    h1 { margin: 0; font-size: 30px; font-weight: 800; color: var(--primary); }
-    .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        
+        /* Table & Report Styling */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem; }
+        th { background-color: #1e293b; color: white; padding: 0.75rem; text-align: left; font-weight: 600; }
+        td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
+        tr:nth-child(even) { background-color: #f1f5f9; }
+        .total-row { font-weight: 700; background-color: #e2e8f0 !important; }
+        
+        .section-title { border-left: 4px solid #3b82f6; padding-left: 1rem; margin-top: 1.5rem; margin-bottom: 1rem; font-weight: 700; color: #1e293b; font-size: 1.125rem; }
+        .report-card { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; }
+        
+        /* Metrics Styling */
+        .metric-box { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 0.5rem; text-align: center; }
+        .metric-title { font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.05em; }
+        .metric-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-top: 0.5rem; }
+        
+        /* Form Inputs */
+        label { font-size: 0.875rem; font-weight: 600; color: #334155; }
+        input, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; font-size: 0.875rem; }
+        input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; }
 
-    .actions { display: flex; gap: 10px; }
-    button { border: 1px solid var(--border); background: var(--card); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
-    button:hover { background: #f8fafc; border-color: var(--muted); }
-    button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-    button.danger-btn { color: var(--danger); border-color: #fecaca; }
-
-    .warning { display: none; background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; }
-
-    .tabs { display: flex; gap: 6px; background: #e2e8f0; padding: 4px; border-radius: 10px; margin-bottom: 24px; width: fit-content; }
-    .tab { border: none; background: transparent; padding: 8px 18px; border-radius: 7px; font-weight: 600; color: var(--muted); cursor: pointer; }
-    .tab.active { background: var(--card); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-    .card-title { font-size: 16px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; }
-
-    .grid { display: grid; gap: 16px; }
-    .grid-4 { grid-template-columns: repeat(4, 1fr); }
-    .grid-2 { grid-template-columns: repeat(2, 1fr); }
-
-    .field { display: flex; flex-direction: column; gap: 4px; }
-    label { font-size: 12px; font-weight: 700; color: var(--muted); }
-    input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
-    
-    .line-row { display: grid; gap: 12px; align-items: end; border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #fff; margin-bottom: 10px; }
-    .line-row.products { grid-template-columns: 2fr 1fr 1fr 1fr auto; }
-    .line-row.salaries { grid-template-columns: 2fr 1fr 1fr auto; }
-    .line-row.expenses { grid-template-columns: 2fr 1fr 1fr auto; }
-    .line-row.startup { grid-template-columns: 2.5fr 1fr auto; }
-
-    .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-    .metric { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-    .metric .m-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .metric .m-value { margin-top: 6px; font-size: 24px; font-weight: 800; color: var(--primary); }
-
-    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
-    table { width: 100%; border-collapse: collapse; min-width: 900px; }
-    th, td { padding: 12px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
-    th { background: #f8fafc; font-weight: 700; color: var(--muted); font-size: 11px; text-transform: uppercase; }
-    td:first-child { font-weight: 600; position: sticky; left: 0; background: #fff; border-right: 2px solid var(--border); }
-    .row-total { background: #f1f5f9; font-weight: 700; }
-    .neg { color: var(--danger); }
-    .pos { color: var(--success); }
-
-    @media (max-width: 900px) { .grid-4, .metric-grid { grid-template-columns: repeat(2, 1fr); } }
-  </style>
+        /* Print Optimization */
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .report-card { box-shadow: none; border: none; margin-bottom: 1rem; padding: 0; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            h1, h2, h3 { page-break-after: avoid; }
+        }
+    </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-<div class="container">
-  <div class="header">
-    <div>
-      <h1 id="dispName">Business Projection</h1>
-      <div class="sub">South African Compliance Engine (SBC Tax & VAT)</div>
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 border-b pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-900">Financial Planning Dashboard</h1>
+                <p class="text-slate-500 mt-1">Cape Town Operations • SARS, VAT & IFRS Compliant Engine</p>
+            </div>
+            <div class="no-print flex gap-3">
+                <button onclick="calculate()" class="bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded hover:bg-slate-200 border border-slate-300 transition">
+                    Refresh
+                </button>
+                <button onclick="exportPDF()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 shadow-sm transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Export to PDF
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <aside class="lg:col-span-1 no-print">
+                <div class="bg-white p-5 rounded-lg shadow-sm border sticky top-8 max-h-[90vh] overflow-y-auto">
+                    <h2 class="text-lg font-bold mb-4 text-slate-800 border-b pb-2">Configuration Matrix</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <label class="text-blue-900">Scenario (Stress Test)</label>
+                            <select id="scenario" class="font-medium text-slate-800 bg-white">
+                                <option value="base">Base Case (100%)</option>
+                                <option value="stress">Pessimistic (80% Rev, 110% Costs)</option>
+                                <option value="optimistic">Optimistic (120% Rev, 90% Costs)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label>VAT Registered</label>
+                                <select id="vatRegistered">
+                                    <option value="yes">Yes (15%)</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Tax Regime</label>
+                                <select id="taxRegime">
+                                    <option value="sbc">SBC Scale</option>
+                                    <option value="std">Standard (27%)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label>Days Sales Outstanding (DSO)</label>
+                            <select id="dso">
+                                <option value="0">0 Days (Immediate)</option>
+                                <option value="30">30 Days</option>
+                                <option value="60">60 Days</option>
+                            </select>
+                        </div>
+
+                        <hr class="border-slate-200">
+                        
+                        <div><label>Starting Subscriptions</label><input type="number" id="startSubs" value="150"></div>
+                        <div><label>Monthly Growth (Clients)</label><input type="number" id="growthRate" value="12"></div>
+                        <div><label>Avg Subscription Fee (R)</label><input type="number" id="subFee" value="3500"></div>
+                        <div><label>Direct Costs (% of Rev)</label><input type="number" id="directCostPct" value="12"></div>
+                        <div><label>Year 1 Operating Expenses (R)</label><input type="number" id="year1OpEx" value="4850000"></div>
+                        <div><label>Depreciation & Interest (R)</label><input type="number" id="deprInt" value="185000"></div>
+                        <div><label>Starting Assets (Equity) (R)</label><input type="number" id="startingAssets" value="4000000"></div>
+                        
+                        <div class="pt-2">
+                            <button onclick="calculate()" class="w-full bg-slate-800 text-white font-bold py-2 px-4 rounded hover:bg-slate-900 transition">Update Reports</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="lg:col-span-3" id="printable-area">
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="metric-box">
+                        <div class="metric-title">Current Ratio</div>
+                        <div class="metric-value text-blue-600" id="metricCurrentRatio">0.0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-title">Monthly Burn / Free Cash</div>
+                        <div class="metric-value" id="metricBurnRate">R 0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-title">Total Headcount</div>
+                        <div class="metric-value text-slate-800" id="metricHeadcount">0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-title">Tax Regime Applied</div>
+                        <div class="metric-value text-slate-800" id="metricTaxRegime" style="font-size:1.125rem; line-height:2rem;">Standard</div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3 class="section-title mt-0">6.2.2 Monthly Sales Volume (Year 1)</h3>
+                    <div class="table-container">
+                        <table id="monthlySalesTable">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Active Subscriptions</th>
+                                    <th>Avg Fee (Excl. VAT)</th>
+                                    <th>Total Revenue</th>
+                                    <th>Cash Collected (Inc. VAT)</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="report-card">
+                        <h3 class="section-title mt-0">6.2.3 Profit & Loss (Excl. VAT)</h3>
+                        <table id="plTable"><tbody></tbody></table>
+                    </div>
+
+                    <div class="report-card">
+                        <h3 class="section-title mt-0">6.2.4 Cashflow Projection</h3>
+                        <table id="cashflowTable"><tbody></tbody></table>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3 class="section-title mt-0">6.2.5 Break-Even Analysis (Monthly)</h3>
+                    <table id="breakevenTable"><tbody></tbody></table>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="report-card">
+                        <h3 class="section-title mt-0">6.2.6 Balance Sheet (Year 1 End)</h3>
+                        <table id="balanceSheetTable"><tbody></tbody></table>
+                    </div>
+
+                    <div class="report-card">
+                        <h3 class="section-title mt-0">6.2.7 Personnel Plan</h3>
+                        <table id="personnelTable">
+                            <thead>
+                                <tr><th>Role</th><th>Staff</th><th>Monthly Salary</th><th>Annual Cost</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3 class="section-title mt-0">6.3 Five-Year Summary</h3>
+                    <div class="table-container">
+                        <table id="fiveYearTable">
+                            <thead>
+                                <tr>
+                                    <th>Metric (All figures in R'000)</th>
+                                    <th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th><th>Year 5</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
     </div>
-    <div class="actions">
-      <button onclick="exportFile()">Save Project</button>
-      <button onclick="document.getElementById('fileIn').click()">Load Project</button>
-      <button class="primary" onclick="exportExcel()">Export Professional Excel</button>
-      <input type="file" id="fileIn" style="display:none" onchange="importFile(event)">
-    </div>
-  </div>
 
-  <div class="warning" id="warn">⚠️ Warning: Cash balance falls below zero in the forecast.</div>
+    <script>
+        // Formatting Helpers
+        const formatR = (val) => "R " + Number(val).toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        const formatK = (val) => "R " + Math.round(val / 1000).toLocaleString('en-ZA') + "k";
 
-  <div class="tabs">
-    <button class="tab active" onclick="setTab('setup', this)">Setup</button>
-    <button class="tab" onclick="setTab('revenue', this)">Revenue</button>
-    <button class="tab" onclick="setTab('team', this)">Team</button>
-    <button class="tab" onclick="setTab('costs', this)">Operating Costs</button>
-    <button class="tab" onclick="setTab('startup', this)">Startup</button>
-    <button class="tab" onclick="setTab('dash', this)">Dashboard</button>
-  </div>
+        // Main Calculation Engine
+        function calculate() {
+            // Read Inputs
+            const startSubs = parseInt(document.getElementById('startSubs').value);
+            const growth = parseInt(document.getElementById('growthRate').value);
+            const fee = parseFloat(document.getElementById('subFee').value);
+            const directPctInput = parseFloat(document.getElementById('directCostPct').value) / 100;
+            const opExTotal = parseFloat(document.getElementById('year1OpEx').value);
+            const deprInt = parseFloat(document.getElementById('deprInt').value);
+            const startAssets = parseFloat(document.getElementById('startingAssets').value);
 
-  <div id="tab-setup" class="tab-panel active">
-    <div class="card">
-      <div class="card-title">General Config</div>
-      <div class="grid grid-4" style="margin-top:15px">
-        <div class="field"><label>Business Name</label><input type="text" id="businessName" oninput="up('businessName', this.value)"></div>
-        <div class="field"><label>Tax Type</label><select id="taxType" onchange="up('taxType', this.value)"><option value="std">Standard Corporate (27%)</option><option value="sbc">Small Business Corp (SBC)</option></select></div>
-        <div class="field"><label>VAT Registered?</label><select id="isVat" onchange="up('isVat', this.value)"><option value="no">No</option><option value="yes">Yes (15%)</option></select></div>
-        <div class="field"><label>Cash Gap (Days)</label><input type="number" id="dso" oninput="up('dso', this.value)" placeholder="e.g. 30"></div>
-        <div class="field"><label>Scenario</label><select id="scenario" onchange="up('scenario', this.value)"><option value="1">Base Case (100%)</option><option value="0.8">Pessimistic (80%)</option><option value="1.2">Optimistic (120%)</option></select></div>
-        <div class="field"><label>Start Month</label><select id="startMonth" onchange="up('startMonth', this.value)"></select></div>
-        <div class="field"><label>Opening Cash</label><input type="number" id="openingCash" oninput="up('openingCash', this.value)"></div>
-        <div class="field"><label>Owner Funds</label><input type="number" id="ownerContribution" oninput="up('ownerContribution', this.value)"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Loan Details</div>
-      <div class="grid grid-4" style="margin-top:15px">
-        <div class="field"><label>Loan Amount</label><input type="number" id="loanAmount" oninput="up('loanAmount', this.value)"></div>
-        <div class="field"><label>Interest Rate %</label><input type="number" id="loanRate" oninput="up('loanRate', this.value)"></div>
-        <div class="field"><label>Term (Months)</label><input type="number" id="loanTerm" oninput="up('loanTerm', this.value)"></div>
-        <div class="metric"><div class="m-label">Monthly Payment</div><div class="m-value" style="font-size:18px" id="dispLoan">R 0</div></div>
-      </div>
-    </div>
-  </div>
+            // Functional Options
+            const scenario = document.getElementById('scenario').value;
+            const isVatRegistered = document.getElementById('vatRegistered').value === 'yes';
+            const taxRegime = document.getElementById('taxRegime').value;
+            const dsoMonths = parseInt(document.getElementById('dso').value) / 30;
 
-  <div id="tab-revenue" class="tab-panel">
-    <div class="card">
-      <div class="card-head"><div class="card-title">Revenue Streams</div><button class="primary" onclick="addItem('products')">+ Add Product</button></div>
-      <div id="cont-products"></div>
-    </div>
-  </div>
+            // Apply Scenario Modifiers
+            let revMult = 1.0;
+            let costMult = 1.0;
+            if (scenario === 'stress') { revMult = 0.8; costMult = 1.1; }
+            if (scenario === 'optimistic') { revMult = 1.2; costMult = 0.9; }
 
-  <div id="tab-team" class="tab-panel">
-    <div class="card">
-      <div class="card-head"><div class="card-title">Payroll</div><button class="primary" onclick="addItem('salaries')">+ Add Role</button></div>
-      <div id="cont-salaries"></div>
-    </div>
-  </div>
+            const directPct = directPctInput * costMult;
+            const vatRate = 0.15;
+            const vatMult = isVatRegistered ? (1 + vatRate) : 1.0;
 
-  <div id="tab-costs" class="tab-panel">
-    <div class="card">
-      <div class="card-head"><div class="card-title">Operating Expenses</div><button class="primary" onclick="addItem('expenses')">+ Add Expense</button></div>
-      <div id="cont-expenses"></div>
-    </div>
-  </div>
+            // 1. Monthly Sales & DSO (Days Sales Outstanding) Logic
+            let monthlyRevs = [];
+            let cashInflows = [];
+            let currentSubs = startSubs;
+            let totalYear1Rev = 0;
+            let salesHtml = "";
 
-  <div id="tab-startup" class="tab-panel">
-    <div class="grid grid-2">
-      <div class="card">
-        <div class="card-head"><div class="card-title">Capital Outlay</div><button class="primary" onclick="addItem('startup')">+ Add Item</button></div>
-        <div id="cont-startup"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Funding Summary</div>
-        <div id="fundingList" style="margin-top:20px"></div>
-      </div>
-    </div>
-  </div>
+            for (let m = 1; m <= 12; m++) {
+                let rev = currentSubs * (fee * revMult);
+                monthlyRevs.push(rev);
+                totalYear1Rev += rev;
+                
+                // Cash Collection Delay
+                let cashCollected = 0;
+                let refMonthIndex = (m - 1) - dsoMonths;
+                if (refMonthIndex >= 0) {
+                    cashCollected = monthlyRevs[refMonthIndex] * vatMult;
+                }
+                cashInflows.push(cashCollected);
 
-  <div id="tab-dash" class="tab-panel">
-    <div class="metric-grid" id="dashMetrics"></div>
-    <div class="card"><div class="card-title">Income Statement (Profit & Loss)</div><div class="table-wrap" id="tableIncome"></div></div>
-    <div class="card"><div class="card-title">Cash Flow Statement</div><div class="table-wrap" id="tableCash"></div></div>
-  </div>
+                salesHtml += `<tr><td>Month ${m}</td><td>${currentSubs}</td><td>${formatR(fee * revMult)}</td><td>${formatR(rev)}</td><td class="text-green-700 font-semibold">${formatR(cashCollected)}</td></tr>`;
+                currentSubs += growth;
+            }
+            document.querySelector("#monthlySalesTable tbody").innerHTML = salesHtml;
 
-</div>
+            // 2. Profit & Loss (VAT Exclusive)
+            const directCosts = totalYear1Rev * directPct;
+            const grossProfit = totalYear1Rev - directCosts;
+            const opExAdjusted = opExTotal * costMult;
+            const ebitda = grossProfit - opExAdjusted;
+            const npbt = ebitda - deprInt;
+            
+            // Tax Logic (SARS 2024/2025 Brackets)
+            let tax = 0;
+            if (npbt > 0) {
+                if (taxRegime === 'sbc') {
+                    if (npbt <= 95750) tax = 0;
+                    else if (npbt <= 365000) tax = (npbt - 95750) * 0.07;
+                    else if (npbt <= 550000) tax = 18848 + (npbt - 365000) * 0.21;
+                    else tax = 57698 + (npbt - 550000) * 0.27;
+                    document.getElementById('metricTaxRegime').innerText = "SBC Scale";
+                } else {
+                    tax = npbt * 0.27;
+                    document.getElementById('metricTaxRegime').innerText = "Standard 27%";
+                }
+            } else {
+                document.getElementById('metricTaxRegime').innerText = "Assessed Loss";
+            }
+            const npat = npbt - tax;
 
-<script>
-const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-let state = {
-  setup: { businessName: "My Venture", taxType: "std", isVat: "no", dso: 0, scenario: 1, startMonth: 0, openingCash: 0, ownerContribution: 0, loanAmount: 0, loanRate: 12, loanTerm: 60 },
-  products: [{ id: Math.random(), name: "Main Product", price: 1500, units: 10, cos: 300 }],
-  salaries: [{ id: Math.random(), name: "Manager", count: 1, monthly: 20000 }],
-  expenses: [{ id: Math.random(), name: "Marketing", amount: 5000, growth: 5 }],
-  startup: [{ id: Math.random(), name: "Equipment", amount: 25000 }]
-};
+            document.querySelector("#plTable tbody").innerHTML = `
+                <tr><td>Total Revenue</td><td>${formatR(totalYear1Rev)}</td></tr>
+                <tr><td>Direct Costs (${(directPct*100).toFixed(1)}%)</td><td class="text-red-600">(${formatR(directCosts)})</td></tr>
+                <tr class="total-row"><td>Gross Profit</td><td>${formatR(grossProfit)}</td></tr>
+                <tr><td>Operating Expenses</td><td class="text-red-600">(${formatR(opExAdjusted)})</td></tr>
+                <tr class="total-row"><td>EBITDA</td><td>${formatR(ebitda)}</td></tr>
+                <tr><td>Depreciation & Interest</td><td class="text-red-600">(${formatR(deprInt)})</td></tr>
+                <tr class="total-row"><td>Net Profit Before Tax</td><td>${formatR(npbt)}</td></tr>
+                <tr><td>Tax Provision</td><td class="text-red-600">(${formatR(tax)})</td></tr>
+                <tr class="total-row bg-slate-200"><td class="text-blue-700">Net Profit After Tax</td><td class="text-blue-700">${formatR(npat)}</td></tr>
+            `;
 
-function up(key, val) { state.setup[key] = val; render(); }
-function n(v) { return parseFloat(v) || 0; }
-function rand(v) { return "R " + n(v).toLocaleString('en-ZA', { maximumFractionDigits: 0 }); }
+            // 3. Cashflow (VAT Inclusive & Add-backs)
+            const totalCashIn = cashInflows.reduce((a,b) => a+b, 0);
+            const cashOutOps = (directCosts + opExAdjusted) * vatMult; 
+            
+            // Assume 50% of DeprInt is Cash Interest; Tax paid in cash
+            const interestPaidNoVat = deprInt * 0.5; 
+            const cashOutFin = tax + interestPaidNoVat;
+            const deprAddBack = deprInt * 0.5; 
+            
+            const netCashflow = totalCashIn - cashOutOps - cashOutFin; 
 
-function addItem(type) {
-  const blueprints = {
-    products: { id: Math.random(), name: "New Product", price: 0, units: 0, cos: 0 },
-    salaries: { id: Math.random(), name: "New Role", count: 1, monthly: 0 },
-    expenses: { id: Math.random(), name: "New Expense", amount: 0, growth: 0 },
-    startup: { id: Math.random(), name: "New Asset", amount: 0 }
-  };
-  state[type].push(blueprints[type]);
-  render();
-}
+            document.querySelector("#cashflowTable tbody").innerHTML = `
+                <tr><td>Cash Inflow (Operations inc. VAT)</td><td class="text-green-600">${formatR(totalCashIn)}</td></tr>
+                <tr><td>Cash Outflow (Operations inc. VAT)</td><td class="text-red-600">(${formatR(cashOutOps)})</td></tr>
+                <tr><td>Tax & Finance Payments</td><td class="text-red-600">(${formatR(cashOutFin)})</td></tr>
+                <tr class="total-row"><td>Net Cashflow</td><td class="${netCashflow < 0 ? 'text-red-600' : 'text-green-700'}">${formatR(netCashflow)}</td></tr>
+                <tr class="total-row bg-slate-200"><td>Closing Cash Balance</td><td>${formatR(netCashflow)}</td></tr>
+            `;
 
-function removeItem(type, id) { state[type] = state[type].filter(x => x.id !== id); render(); }
+            // 4. Break Even
+            const fixedMonthly = 404166 * costMult;
+            const varPerClient = 420 * costMult;
+            const contrib = (fee * revMult) - varPerClient;
+            const beClients = fixedMonthly / contrib;
 
-function updateItem(type, id, key, val) {
-  let item = state[type].find(x => x.id === id);
-  if (item) item[key] = val;
-  render();
-}
+            document.querySelector("#breakevenTable tbody").innerHTML = `
+                <tr><td>Fixed Monthly Costs</td><td>${formatR(fixedMonthly)}</td></tr>
+                <tr><td>Variable Cost per Client</td><td>${formatR(varPerClient)}</td></tr>
+                <tr><td>Contribution Margin per Client</td><td>${formatR(contrib)}</td></tr>
+                <tr class="total-row"><td>Break-Even Volume</td><td>${Math.ceil(beClients)} Active Clients</td></tr>
+            `;
 
-function calculate() {
-  const p = { periods: [] };
-  const sm = n(state.setup.startMonth);
-  const vat = state.setup.isVat === "yes" ? 1.15 : 1;
-  const dsoMonths = Math.min(2, Math.floor(n(state.setup.dso) / 30));
-  const sc = n(state.setup.scenario);
+            // 5. Balance Sheet (Ensuring Assets = Liabilities + Equity)
+            const closingCash = netCashflow; 
+            const accountsReceivable = (totalYear1Rev * vatMult) - totalCashIn;
+            const fixedAssets = startAssets - deprAddBack;
+            
+            let vatPayable = 0;
+            if (isVatRegistered) {
+                // VAT Collected minus VAT Paid
+                vatPayable = (totalYear1Rev * vatRate) - ((directCosts + opExAdjusted) * vatRate);
+            }
 
-  for(let i=0; i<12; i++) p.periods.push({ label: `${months[(sm+i)%12]} Y1`, type: 'm' });
+            const currentAssets = closingCash + accountsReceivable;
+            
+            // If VAT Payable is negative, it's technically a receivable, but we map it to Current Liab here for structural simplicity
+            const currentLiabilities = vatPayable; 
+            const totalAssets = currentAssets + fixedAssets;
+            const equity = startAssets + npat; 
 
-  p.rev = p.periods.map(() => state.products.reduce((s, x) => s + (n(x.price) * n(x.units) * sc), 0));
-  p.cos = p.periods.map(() => state.products.reduce((s, x) => s + (n(x.cos) * n(x.units)), 0));
-  p.sal = p.periods.map(() => state.salaries.reduce((s, x) => s + (n(x.count) * n(x.monthly)), 0));
-  p.opex = p.periods.map(() => state.expenses.reduce((s, x) => s + n(x.amount), 0));
+            document.querySelector("#balanceSheetTable tbody").innerHTML = `
+                <tr><td>Cash & Equivalents</td><td>${formatR(closingCash)}</td></tr>
+                <tr><td>Accounts Receivable</td><td>${formatR(accountsReceivable)}</td></tr>
+                <tr><td>Non-Current Assets</td><td>${formatR(fixedAssets)}</td></tr>
+                <tr class="total-row"><td>Total Assets</td><td>${formatR(totalAssets)}</td></tr>
+                <tr><td>Current Liabilities (Net VAT)</td><td>${formatR(currentLiabilities)}</td></tr>
+                <tr><td>Shareholder Equity</td><td>${formatR(equity)}</td></tr>
+                <tr class="total-row bg-slate-200"><td>Total Equity & Liabilities</td><td>${formatR(equity + currentLiabilities)}</td></tr>
+            `;
 
-  const loanP = (()=>{
-    const amt = n(state.setup.loanAmount), r = n(state.setup.loanRate)/100/12, t = n(state.setup.loanTerm);
-    if(!amt || !t) return 0; if(!r) return amt/t;
-    return (amt * r) / (1 - Math.pow(1 + r, -t));
-  })();
+            // Metrics Computation
+            if (currentLiabilities > 0) {
+                document.getElementById('metricCurrentRatio').innerText = (currentAssets / currentLiabilities).toFixed(2);
+            } else {
+                document.getElementById('metricCurrentRatio').innerText = "High (No Debt)";
+            }
 
-  p.loanRepay = loanP;
-  p.startupTotal = state.startup.reduce((s, x) => s + n(x.amount), 0);
-  
-  // Income Statement Logic (Net of VAT)
-  p.ebit = p.rev.map((v, i) => v - p.cos[i] - p.sal[i] - p.opex[i]);
-  p.tax = p.ebit.map(v => {
-    if (v <= 0) return 0;
-    if (state.setup.taxType === 'std') return v * 0.27;
-    // SBC Sliding Scale (Simplified)
-    if (v <= 95000) return 0;
-    if (v <= 365000) return (v - 95000) * 0.07;
-    return 18900 + (v - 365000) * 0.21;
-  });
+            if (netCashflow < 0) {
+                document.getElementById('metricBurnRate').innerText = formatR(Math.abs(netCashflow) / 12);
+                document.getElementById('metricBurnRate').className = "metric-value text-red-600";
+                document.getElementById('metricBurnRate').previousElementSibling.innerText = "Monthly Burn Rate";
+            } else {
+                document.getElementById('metricBurnRate').innerText = formatR(netCashflow / 12);
+                document.getElementById('metricBurnRate').className = "metric-value text-green-600";
+                document.getElementById('metricBurnRate').previousElementSibling.innerText = "Free Cash Flow (Mo)";
+            }
 
-  // Cash Flow logic (Includes VAT and DSO)
-  p.cash = [];
-  let current = n(state.setup.openingCash) + n(state.setup.ownerContribution) + n(state.setup.loanAmount) - p.startupTotal;
-  
-  p.periods.forEach((_, i) => {
-    const opening = current;
-    let inflow = (dsoMonths === 0 || i < dsoMonths) ? p.rev[i] : p.rev[i - dsoMonths];
-    inflow *= vat;
-    const outflow = (p.cos[i] + p.sal[i] + p.opex[i]) * vat + loanP;
-    const closing = opening + inflow - outflow;
-    p.cash.push({ opening, inflow, outflow, closing });
-    current = closing;
-  });
+            // 6. Personnel
+            const salaries = [
+                { role: 'Managing Director', qty: 1, sal: 85000 },
+                { role: 'Operations Lead', qty: 1, sal: 45000 },
+                { role: 'SEO & PPC Specialists', qty: 3, sal: 25000 },
+                { role: 'Sales & Support', qty: 2, sal: 18000 }
+            ];
+            let personHtml = "";
+            let totalHeadcount = 0;
+            salaries.forEach(s => {
+                totalHeadcount += s.qty;
+                personHtml += `<tr><td>${s.role}</td><td>${s.qty}</td><td>${formatR(s.sal)}</td><td>${formatR(s.sal * s.qty * 12)}</td></tr>`;
+            });
+            document.querySelector("#personnelTable tbody").innerHTML = personHtml;
+            document.getElementById('metricHeadcount').innerText = totalHeadcount;
 
-  return p;
-}
+            // 7. Five Year Projections
+            let fiveYearHtml = "";
+            const metricsList = ["Revenue", "Net Profit After Tax", "Cash Position", "Total Assets"];
+            let y1Data = [totalYear1Rev, npat, netCashflow, totalAssets];
+            
+            metricsList.forEach((m, idx) => {
+                let row = `<tr><td>${m}</td>`;
+                let val = y1Data[idx];
+                for(let y=1; y<=5; y++) {
+                    row += `<td>${formatK(val)}</td>`;
+                    val = val * 1.15; // 15% flat annual growth assumption
+                }
+                row += `</tr>`;
+                fiveYearHtml += row;
+            });
+            document.querySelector("#fiveYearTable tbody").innerHTML = fiveYearHtml;
+        }
 
-function render() {
-  const p = calculate();
-  document.getElementById('dispName').innerText = state.setup.businessName || "Business Projection";
-  document.getElementById('dispLoan').innerText = rand(p.loanRepay);
-  document.getElementById('warn').style.display = p.cash.some(x => x.closing < 0) ? "block" : "none";
+        // PDF Export Function via html2pdf
+        function exportPDF() {
+            const element = document.getElementById('printable-area');
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5], // top, left, bottom, right
+                filename:     'Financial_Projections_Dashboard.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Visual cue for processing
+            const btn = document.querySelector('button[onclick="exportPDF()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "Generating PDF...";
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+            });
+        }
 
-  // Render Setup Select
-  const smEl = document.getElementById('startMonth');
-  if (!smEl.innerHTML) smEl.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
-  
-  // Sync Setup Inputs
-  Object.keys(state.setup).forEach(k => {
-    const el = document.getElementById(k);
-    if(el) el.value = state.setup[k];
-  });
-
-  // Render Product Rows
-  document.getElementById('cont-products').innerHTML = state.products.map(x => `
-    <div class="line-row products">
-      <div class="field"><label>Item Name</label><input type="text" value="${x.name}" oninput="updateItem('products','${x.id}','name',this.value)"></div>
-      <div class="field"><label>Price (R)</label><input type="number" value="${x.price}" oninput="updateItem('products','${x.id}','price',this.value)"></div>
-      <div class="field"><label>Units/Mo</label><input type="number" value="${x.units}" oninput="updateItem('products','${x.id}','units',this.value)"></div>
-      <div class="field"><label>Unit Cost (R)</label><input type="number" value="${x.cos}" oninput="updateItem('products','${x.id}','cos',this.value)"></div>
-      <button class="danger-btn" onclick="removeItem('products','${x.id}')">Delete</button>
-    </div>
-  `).join('');
-
-  // Render Salary Rows
-  document.getElementById('cont-salaries').innerHTML = state.salaries.map(x => `
-    <div class="line-row salaries">
-      <div class="field"><label>Role</label><input type="text" value="${x.name}" oninput="updateItem('salaries','${x.id}','name',this.value)"></div>
-      <div class="field"><label>Headcount</label><input type="number" value="${x.count}" oninput="updateItem('salaries','${x.id}','count',this.value)"></div>
-      <div class="field"><label>Monthly Salary (R)</label><input type="number" value="${x.monthly}" oninput="updateItem('salaries','${x.id}','monthly',this.value)"></div>
-      <button class="danger-btn" onclick="removeItem('salaries','${x.id}')">Delete</button>
-    </div>
-  `).join('');
-
-  // Render Expense Rows
-  document.getElementById('cont-expenses').innerHTML = state.expenses.map(x => `
-    <div class="line-row expenses">
-      <div class="field"><label>Expense Category</label><input type="text" value="${x.name}" oninput="updateItem('expenses','${x.id}','name',this.value)"></div>
-      <div class="field"><label>Monthly Amount (R)</label><input type="number" value="${x.amount}" oninput="updateItem('expenses','${x.id}','amount',this.value)"></div>
-      <div class="field"><label>Annual Growth %</label><input type="number" value="${x.growth}" oninput="updateItem('expenses','${x.id}','growth',this.value)"></div>
-      <button class="danger-btn" onclick="removeItem('expenses','${x.id}')">Delete</button>
-    </div>
-  `).join('');
-
-  // Render Startup Rows
-  document.getElementById('cont-startup').innerHTML = state.startup.map(x => `
-    <div class="line-row startup">
-      <div class="field"><label>Asset/Description</label><input type="text" value="${x.name}" oninput="updateItem('startup','${x.id}','name',this.value)"></div>
-      <div class="field"><label>Amount (R)</label><input type="number" value="${x.amount}" oninput="updateItem('startup','${x.id}','amount',this.value)"></div>
-      <button class="danger-btn" onclick="removeItem('startup','${x.id}')">Delete</button>
-    </div>
-  `).join('');
-
-  // Funding Summary
-  const funded = n(state.setup.ownerContribution) + n(state.setup.loanAmount);
-  document.getElementById('fundingList').innerHTML = `
-    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee"><span>Capital Required:</span><b>${rand(p.startupTotal)}</b></div>
-    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee"><span>Total Funding:</span><b>${rand(funded)}</b></div>
-    <div style="display:flex; justify-content:space-between; padding:10px 0; font-weight:800; color:${funded >= p.startupTotal ? 'green' : 'red'}"><span>Funding Gap:</span><span>${rand(funded - p.startupTotal)}</span></div>
-  `;
-
-  // Dash Metrics
-  document.getElementById('dashMetrics').innerHTML = `
-    <div class="metric"><div class="m-label">Total Annual Sales</div><div class="m-value">${rand(p.rev.reduce((a,b)=>a+b,0))}</div></div>
-    <div class="metric"><div class="m-label">Net Profit (Year 1)</div><div class="m-value">${rand(p.ebit.reduce((a,b)=>a+b,0) - p.tax.reduce((a,b)=>a+b,0))}</div></div>
-    <div class="metric"><div class="m-label">Closing Cash</div><div class="m-value">${rand(p.cash[11].closing)}</div></div>
-    <div class="metric"><div class="m-label">Avg. Monthly Burn</div><div class="m-value">${rand(p.cash[0].outflow)}</div></div>
-  `;
-
-  renderStatement('tableIncome', p.periods, [
-    { n: "Revenue", v: p.rev },
-    { n: "Cost of Sales", v: p.cos.map(v => -v) },
-    { n: "Salaries", v: p.sal.map(v => -v) },
-    { n: "Operating Expenses", v: p.opex.map(v => -v) },
-    { n: "Taxation", v: p.tax.map(v => -v) },
-    { n: "NET PROFIT", v: p.ebit.map((v, i) => v - p.tax[i]), bold: true }
-  ]);
-
-  renderStatement('tableCash', p.periods, [
-    { n: "Opening Cash", v: p.cash.map(x => x.opening) },
-    { n: "Total Inflows", v: p.cash.map(x => x.inflow) },
-    { n: "Total Outflows", v: p.cash.map(x => x.outflow * -1) },
-    { n: "CLOSING BALANCE", v: p.cash.map(x => x.closing), bold: true }
-  ]);
-  
-  localStorage.setItem('sa_proj_v6', JSON.stringify(state));
-}
-
-function renderStatement(id, periods, rows) {
-  let h = `<table><thead><tr><th>Category</th>${periods.map(x => `<th>${x.label}</th>`).join('')}</tr></thead><tbody>`;
-  rows.forEach(r => {
-    h += `<tr class="${r.bold?'row-total':''}"><td>${r.n}</td>`;
-    r.v.forEach(val => h += `<td class="${val < 0 ? 'neg' : (val > 0 && r.bold ? 'pos' : '')}">${rand(val)}</td>`);
-    h += `</tr>`;
-  });
-  document.getElementById(id).innerHTML = h + `</tbody></table>`;
-}
-
-function setTab(id, btn) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-'+id).classList.add('active');
-  render();
-}
-
-// PERSISTENCE
-function exportFile() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${state.setup.businessName}.json`; a.click();
-}
-function importFile(e) {
-  const reader = new FileReader();
-  reader.onload = (ev) => { state = JSON.parse(ev.target.result); render(); };
-  reader.readAsText(e.target.files[0]);
-}
-
-// EXCEL EXPORT
-function exportExcel() {
-  const p = calculate();
-  const wb = XLSX.utils.book_new();
-
-  // Helper for sheets
-  const addSheet = (name, headerRow, dataRows) => {
-    const ws = XLSX.utils.aoa_to_sheet([[state.setup.businessName], [name], [], headerRow, ...dataRows]);
-    // Formatting
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    ws['!cols'] = [{ wch: 25 }, ...Array(12).fill({ wch: 12 })];
-    for (let r = 0; r <= range.e.r; r++) {
-      for (let c = 0; c <= range.e.c; c++) {
-        const cell = ws[XLSX.utils.encode_cell({ r, c })];
-        if (!cell) continue;
-        cell.s = { font: { name: "Arial", sz: 10 }, alignment: { horizontal: c === 0 ? "left" : "right" } };
-        if (r < 4) cell.s.font.bold = true;
-        if (c > 0 && typeof cell.v === 'number') cell.z = '"R "#,##0';
-      }
-    }
-    XLSX.utils.book_append_sheet(wb, ws, name);
-  };
-
-  addSheet("Income Statement", ["Line Item", ...p.periods.map(x => x.label)], [
-    ["Revenue", ...p.rev], ["COS", ...p.cos], ["Salaries", ...p.sal], ["Expenses", ...p.opex], ["Tax", ...p.tax], ["Net Profit", ...p.ebit.map((v, i) => v - p.tax[i])]
-  ]);
-  addSheet("Cash Flow", ["Line Item", ...p.periods.map(x => x.label)], [
-    ["Receipts", ...p.cash.map(x => x.inflow)], ["Payments", ...p.cash.map(x => x.outflow)], ["Closing", ...p.cash.map(x => x.closing)]
-  ]);
-  addSheet("Startup Assets", ["Item", "Amount"], state.startup.map(x => [x.name, n(x.amount)]));
-
-  XLSX.writeFile(wb, `${state.setup.businessName}_Financials.xlsx`);
-}
-
-// Init
-const saved = localStorage.getItem('sa_proj_v6');
-if (saved) state = JSON.parse(saved);
-render();
-</script>
+        // Auto-run on load
+        window.onload = calculate;
+    </script>
 </body>
 </html>
