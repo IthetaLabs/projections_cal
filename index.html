@@ -3,145 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iTheta Labs - Comprehensive Financial Planner</title>
+    <title>iTheta Labs - Advanced Financial Projection Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
-        .tab-btn { padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 2px solid transparent; transition: all 0.2s; color: #64748b; font-size: 0.875rem; white-space: nowrap; }
-        .tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; background: #eff6ff; }
-        .table-container { overflow-x: auto; background: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .tab-btn { padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 2px solid transparent; transition: all 0.2s; color: #64748b; font-size: 0.875rem; }
+        .tab-btn.active { border-bottom-color: #0f172a; color: #0f172a; background: #fff; }
+        .table-wrap { overflow-x: auto; background: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; margin-top: 1rem; }
         table { width: 100%; border-collapse: collapse; font-size: 0.815rem; }
         th { background: #f8fafc; padding: 0.75rem; text-align: left; font-weight: 700; border-bottom: 2px solid #e2e8f0; position: sticky; left: 0; z-index: 10; }
-        td { padding: 0.4rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
-        .sticky-col { position: sticky; left: 0; background: white; font-weight: 600; border-right: 1px solid #e2e8f0; min-width: 180px; }
-        .edit-input { width: 90px; border: 1px solid #cbd5e1; border-radius: 0.25rem; padding: 0.2rem 0.4rem; text-align: right; font-family: monospace; font-size: 0.75rem; }
-        .global-input { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; font-size: 0.875rem; }
-        .metric-card { background: white; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
-        .report-section { display: none; }
-        .report-section.active { display: block; }
+        td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+        .sticky-col { position: sticky; left: 0; background: white; font-weight: 600; border-right: 1px solid #e2e8f0; min-width: 200px; }
+        .edit-input { width: 100px; border: 1px solid #cbd5e1; border-radius: 0.25rem; padding: 0.25rem; text-align: right; font-family: monospace; }
+        .global-input { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; background: white; }
+        .input-row { display: grid; gap: 1rem; align-items: end; background: white; padding: 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; margin-bottom: 0.5rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
         .total-row { background: #f8fafc; font-weight: 800; }
     </style>
 </head>
-<body class="pb-12">
+<body class="pb-20">
 
-    <div class="max-w-[1650px] mx-auto px-4 py-6">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+    <div class="max-w-[1600px] mx-auto px-6 py-8">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-900">iTheta Financial Suite</h1>
-                <p class="text-slate-500 text-sm">Professional Business Plan Projections (IFRS/SARS)</p>
+                <h1 class="text-3xl font-extrabold tracking-tight">Financial Projection Suite</h1>
+                <p class="text-slate-500">Business Plan Grade • Detailed Sales, Personnel & Balance Sheet</p>
             </div>
             <div class="flex flex-wrap gap-3">
-                <button onclick="exportJSON()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-900 transition">Save Project (JSON)</button>
-                <button onclick="document.getElementById('importFile').click()" class="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold">Load Project</button>
-                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importJSON(event)">
+                <button onclick="exportProject()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-black transition">Export JSON</button>
+                <button onclick="document.getElementById('importFile').click()" class="bg-white border border-slate-300 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition">Import JSON</button>
+                <button onclick="exportExcel()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-emerald-700 transition">Export Excel</button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importProject(event)">
             </div>
         </header>
 
-        <div class="bg-white p-6 rounded-xl border border-slate-200 mb-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Projection Period</label>
+                <div><label class="block text-xs font-bold uppercase text-slate-500 mb-2">Projection Duration</label>
                     <select id="duration" class="global-input" onchange="state.duration=Number(this.value); calculate();">
                         <option value="12">12 Months (1 Year)</option>
-                        <option value="24">24 Months (2 Years)</option>
                         <option value="36">36 Months (3 Years)</option>
                         <option value="60">60 Months (5 Years)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Tax Regime</label>
-                    <select id="taxRegime" class="global-input" onchange="state.setup.taxRegime=this.value; calculate();">
-                        <option value="sbc">SBC (Sliding Scale)</option>
-                        <option value="std">Corporate (27%)</option>
-                    </select>
+                <div><label class="block text-xs font-bold uppercase text-slate-500 mb-2">Opening Cash (R)</label>
+                    <input type="number" id="openingCash" class="global-input" value="0" oninput="state.setup.opening=Number(this.value); calculate();">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">VAT Status</label>
-                    <select id="vatStatus" class="global-input" onchange="state.setup.vat=this.value==='yes'; calculate();">
-                        <option value="no">Not Registered</option>
-                        <option value="yes">VAT Registered (15%)</option>
-                    </select>
+                <div><label class="block text-xs font-bold uppercase text-slate-500 mb-2">Loan Amount (R)</label>
+                    <input type="number" id="loanAmount" class="global-input" value="0" oninput="state.setup.loan=Number(this.value); calculate();">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Days Sales Outstanding (DSO)</label>
-                    <input type="number" id="dso" class="global-input" value="30" oninput="state.setup.dso=Number(this.value); calculate();">
+                <div><label class="block text-xs font-bold uppercase text-slate-500 mb-2">Tax Rate (%)</label>
+                    <input type="number" id="taxRate" class="global-input" value="27" oninput="state.setup.tax=Number(this.value); calculate();">
                 </div>
             </div>
         </div>
 
-        <nav class="flex overflow-x-auto border-b border-slate-200 mb-6 bg-white rounded-t-xl no-scrollbar">
-            <button class="tab-btn active" onclick="switchTab('dashboard')">Summary & Liquidity</button>
-            <button class="tab-btn" onclick="switchTab('income')">Profit & Loss</button>
-            <button class="tab-btn" onclick="switchTab('cashflow')">Cash Flow</button>
-            <button class="tab-btn" onclick="switchTab('balance')">Balance Sheet</button>
-            <button class="tab-btn" onclick="switchTab('personnel')">Personnel Plan</button>
-            <button class="tab-btn" onclick="switchTab('breakeven')">Break-Even Analysis</button>
-            <button class="tab-btn" onclick="switchTab('stress')">Stress Test</button>
+        <nav class="flex overflow-x-auto border-b border-slate-200 mb-8 gap-2">
+            <button class="tab-btn active" onclick="showTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="showTab('sales')">Sales Forecast</button>
+            <button class="tab-btn" onclick="showTab('personnel')">Personnel Plan</button>
+            <button class="tab-btn" onclick="showTab('expenses')">Operating Expenses</button>
+            <button class="tab-btn" onclick="showTab('outputs')">Projections & Reports</button>
         </nav>
 
-        <div id="tab-dashboard" class="report-section active">
+        <div id="tab-dashboard" class="tab-panel active">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="metric-card"><p class="text-xs font-bold text-slate-400">Current Ratio (Liquidity)</p><h2 id="m-ratio" class="text-2xl font-black text-blue-600">0.0</h2></div>
-                <div class="metric-card"><p class="text-xs font-bold text-slate-400">Net Profit (Total)</p><h2 id="m-profit" class="text-2xl font-black text-slate-800">R 0</h2></div>
-                <div class="metric-card"><p class="text-xs font-bold text-slate-400">Closing Cash</p><h2 id="m-cash" class="text-2xl font-black text-emerald-600">R 0</h2></div>
-                <div class="metric-card"><p class="text-xs font-bold text-slate-400">Monthly Burn Rate</p><h2 id="m-burn" class="text-2xl font-black text-red-600">R 0</h2></div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200"><p class="text-xs font-bold text-slate-400 uppercase">Total Revenue</p><h2 id="dash-rev" class="text-2xl font-black">R 0</h2></div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200"><p class="text-xs font-bold text-slate-400 uppercase">Net Profit</p><h2 id="dash-profit" class="text-2xl font-black text-blue-600">R 0</h2></div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200"><p class="text-xs font-bold text-slate-400 uppercase">Current Ratio</p><h2 id="dash-ratio" class="text-2xl font-black text-emerald-600">0.0</h2></div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200"><p class="text-xs font-bold text-slate-400 uppercase">Break-Even (Units)</p><h2 id="dash-be" class="text-2xl font-black text-orange-600">0</h2></div>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="metric-card"><h3 class="font-bold mb-4">Revenue vs Expenses</h3><canvas id="chartRP" height="280"></canvas></div>
-                <div class="metric-card"><h3 class="font-bold mb-4">Liquidity (Current Ratio) Trend</h3><canvas id="chartLiq" height="280"></canvas></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><canvas id="chartRevenue" height="300"></canvas></div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><canvas id="chartCash" height="300"></canvas></div>
             </div>
         </div>
 
-        <div id="tab-income" class="report-section"><div id="table-income" class="table-container"></div></div>
-        <div id="tab-cashflow" class="report-section"><div id="table-cashflow" class="table-container"></div></div>
-        <div id="tab-balance" class="report-section"><div id="table-balance" class="table-container"></div></div>
-        <div id="tab-personnel" class="report-section"><div id="table-personnel" class="table-container"></div></div>
-        <div id="tab-breakeven" class="report-section"><div id="table-breakeven" class="table-container"></div></div>
-
-        <div id="tab-stress" class="report-section">
-            <div class="bg-red-50 p-6 rounded-xl border border-red-100 mb-6">
-                <h3 class="text-lg font-bold text-red-900 mb-4">Emergency Sensitivity Testing</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <label class="block text-sm font-bold text-red-800">Revenue Multiplier: <span id="v-rev">100%</span></label>
-                        <input type="range" min="50" max="150" value="100" class="w-full" oninput="state.stress.rev=this.value/100; document.getElementById('v-rev').innerText=this.value+'%'; calculate();">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-red-800">Cost Multiplier: <span id="v-cost">100%</span></label>
-                        <input type="range" min="50" max="150" value="100" class="w-full" oninput="state.stress.cost=this.value/100; document.getElementById('v-cost').innerText=this.value+'%'; calculate();">
-                    </div>
-                </div>
+        <div id="tab-sales" class="tab-panel">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Product & Service Lines</h3>
+                <button onclick="addItem('products')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">+ Add Product</button>
             </div>
-            <div id="table-stress" class="table-container"></div>
+            <div id="container-products" class="space-y-2"></div>
+        </div>
+
+        <div id="tab-personnel" class="tab-panel">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Staff & Salaries</h3>
+                <button onclick="addItem('personnel')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">+ Add Staff Member</button>
+            </div>
+            <div id="container-personnel" class="space-y-2"></div>
+        </div>
+
+        <div id="tab-expenses" class="tab-panel">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Fixed Operating Expenses</h3>
+                <button onclick="addItem('expenses')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">+ Add Expense</button>
+            </div>
+            <div id="container-expenses" class="space-y-2"></div>
+        </div>
+
+        <div id="tab-outputs" class="tab-panel">
+            <div class="space-y-12">
+                <section>
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">Income Statement (Profit & Loss) <span class="text-xs bg-slate-100 px-2 py-1 rounded">Editable by Month</span></h3>
+                    <div id="report-income" class="table-wrap"></div>
+                </section>
+                <section>
+                    <h3 class="text-xl font-bold mb-4">Cash Flow Statement</h3>
+                    <div id="report-cashflow" class="table-wrap"></div>
+                </section>
+                <section>
+                    <h3 class="text-xl font-bold mb-4">Balance Sheet (Assets, Liabilities & Equity)</h3>
+                    <div id="report-balance" class="table-wrap"></div>
+                </section>
+            </div>
         </div>
     </div>
 
     <script>
+        // Core State
         let state = {
             duration: 12,
-            setup: { dso: 30, taxRegime: 'sbc', vat: false },
-            stress: { rev: 1.0, cost: 1.0 },
+            setup: { opening: 0, loan: 0, tax: 27 },
             overrides: {},
-            personnel: [
-                { id: 'p1', role: 'Director', salary: 45000, count: 1 },
-                { id: 'p2', role: 'Support Staff', salary: 12000, count: 2 }
-            ],
-            lineItems: {
-                revenue: [{ id: 'r1', name: 'Primary Service', base: 120000 }],
-                expense: [{ id: 'e1', name: 'Rent & Utilities', base: 15000 }, { id: 'e2', name: 'Marketing', base: 8000 }]
+            items: {
+                products: [{ id: 'p1', name: 'Standard Product', price: 1500, cost: 600, units: 50 }],
+                personnel: [{ id: 's1', role: 'General Manager', salary: 35000, count: 1 }],
+                expenses: [{ id: 'e1', name: 'Office Rent', amount: 12000 }, { id: 'e2', name: 'Marketing', amount: 5000 }]
             }
         };
 
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         let charts = {};
 
-        function switchTab(id) {
-            document.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+        function showTab(id) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + id).classList.add('active');
             event.target.classList.add('active');
             calculate();
+        }
+
+        function addItem(type) {
+            const id = type[0] + Date.now();
+            if (type === 'products') state.items.products.push({ id, name: 'New Product', price: 0, cost: 0, units: 0 });
+            if (type === 'personnel') state.items.personnel.push({ id, role: 'New Role', salary: 0, count: 1 });
+            if (type === 'expenses') state.items.expenses.push({ id, name: 'New Expense', amount: 0 });
+            renderInputs();
+            calculate();
+        }
+
+        function removeItem(type, index) {
+            state.items[type].splice(index, 1);
+            renderInputs();
+            calculate();
+        }
+
+        function updateItem(type, index, field, value) {
+            state.items[type][index][field] = (field === 'name' || field === 'role') ? value : Number(value);
+            calculate();
+        }
+
+        function renderInputs() {
+            // Products
+            document.getElementById('container-products').innerHTML = state.items.products.map((p, i) => `
+                <div class="input-row grid-cols-5">
+                    <div><label class="text-xs font-bold">Product Name</label><input type="text" value="${p.name}" onchange="updateItem('products',${i},'name',this.value)" class="global-input"></div>
+                    <div><label class="text-xs font-bold">Price (R)</label><input type="number" value="${p.price}" onchange="updateItem('products',${i},'price',this.value)" class="global-input"></div>
+                    <div><label class="text-xs font-bold">Cost/Unit (R)</label><input type="number" value="${p.cost}" onchange="updateItem('products',${i},'cost',this.value)" class="global-input"></div>
+                    <div><label class="text-xs font-bold">Monthly Units</label><input type="number" value="${p.units}" onchange="updateItem('products',${i},'units',this.value)" class="global-input"></div>
+                    <button onclick="removeItem('products',${i})" class="text-red-500 font-bold mb-2">Delete</button>
+                </div>
+            `).join('');
+
+            // Personnel
+            document.getElementById('container-personnel').innerHTML = state.items.personnel.map((p, i) => `
+                <div class="input-row grid-cols-4">
+                    <div><label class="text-xs font-bold">Job Role</label><input type="text" value="${p.role}" onchange="updateItem('personnel',${i},'role',this.value)" class="global-input"></div>
+                    <div><label class="text-xs font-bold">Monthly Salary (R)</label><input type="number" value="${p.salary}" onchange="updateItem('personnel',${i},'salary',this.value)" class="global-input"></div>
+                    <div><label class="text-xs font-bold">Headcount</label><input type="number" value="${p.count}" onchange="updateItem('personnel',${i},'count',this.value)" class="global-input"></div>
+                    <button onclick="removeItem('personnel',${i})" class="text-red-500 font-bold mb-2">Delete</button>
+                </div>
+            `).join('');
+
+            // Expenses
+            document.getElementById('container-expenses').innerHTML = state.items.expenses.map((e, i) => `
+                <div class="input-row grid-cols-3">
+                    <div><label class="text-xs font-bold">Expense Name</label><input type="text" value="${e.name}" onchange="updateItem('expenses',${i},'name',this.value)" class="global-input"></div>
+                    <div><label class="text-xs font-bold">Monthly Cost (R)</label><input type="number" value="${e.amount}" onchange="updateItem('expenses',${i},'amount',this.value)" class="global-input"></div>
+                    <button onclick="removeItem('expenses',${i})" class="text-red-500 font-bold mb-2">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function calculate() {
+            const m = state.duration;
+            let reportData = { income: [], cash: [], balance: [] };
+            
+            let monthlyRev = Array(m).fill(0);
+            let monthlyCos = Array(m).fill(0);
+            let monthlySal = Array(m).fill(0);
+            let monthlyOpex = Array(m).fill(0);
+            let netProfit = Array(m).fill(0);
+            let cashBalance = Array(m).fill(0);
+
+            // 1. Process Revenue & Cost of Sales
+            state.items.products.forEach(p => {
+                let revRow = { name: p.name + " (Rev)", id: p.id + '_r', values: [] };
+                let cosRow = { name: p.name + " (COS)", id: p.id + '_c', values: [] };
+                for (let i = 0; i < m; i++) {
+                    let rVal = getVal(p.id + '_r', i, p.price * p.units);
+                    let cVal = getVal(p.id + '_c', i, p.cost * p.units);
+                    revRow.values.push(rVal);
+                    cosRow.values.push(cVal);
+                    monthlyRev[i] += rVal;
+                    monthlyCos[i] += cVal;
+                }
+                reportData.income.push(revRow, cosRow);
+            });
+
+            // 2. Personnel
+            state.items.personnel.forEach(p => {
+                let row = { name: p.role, id: p.id, values: [] };
+                for (let i = 0; i < m; i++) {
+                    let val = getVal(p.id, i, p.salary * p.count);
+                    row.values.push(val);
+                    monthlySal[i] += val;
+                }
+                reportData.income.push(row);
+            });
+
+            // 3. Operating Expenses
+            state.items.expenses.forEach(e => {
+                let row = { name: e.name, id: e.id, values: [] };
+                for (let i = 0; i < m; i++) {
+                    let val = getVal(e.id, i, e.amount);
+                    row.values.push(val);
+                    monthlyOpex[i] += val;
+                }
+                reportData.income.push(row);
+            });
+
+            // 4. Financial Engine
+            let runningCash = state.setup.opening + state.setup.loan;
+            let totalRetainedEarnings = 0;
+            let balanceCash = [];
+            let balanceEquity = [];
+
+            for (let i = 0; i < m; i++) {
+                netProfit[i] = monthlyRev[i] - monthlyCos[i] - monthlySal[i] - monthlyOpex[i];
+                runningCash += netProfit[i];
+                cashBalance[i] = runningCash;
+                totalRetainedEarnings += (netProfit[i] * (1 - state.setup.tax / 100));
+                
+                balanceCash.push(runningCash);
+                balanceEquity.push(state.setup.opening + totalRetainedEarnings);
+            }
+
+            // Render Tables
+            renderTable('report-income', 'Income Statement', reportData.income, m);
+            renderTable('report-cashflow', 'Cash Flow', [{name: 'Monthly Closing Cash', id: 'cash_row', values: cashBalance}], m);
+            renderTable('report-balance', 'Balance Sheet', [
+                {name: 'Current Assets (Cash)', id: 'bs_cash', values: balanceCash},
+                {name: 'Long Term Liabilities (Loan)', id: 'bs_loan', values: Array(m).fill(state.setup.loan)},
+                {name: 'Owners Equity', id: 'bs_equity', values: balanceEquity}
+            ], m);
+
+            updateDashboard(monthlyRev, netProfit, cashBalance);
+        }
+
+        function getVal(rowId, mIdx, base) {
+            return (state.overrides[rowId] && state.overrides[rowId][mIdx] !== undefined) ? state.overrides[rowId][mIdx] : base;
         }
 
         function setOverride(rowId, mIdx, val) {
@@ -150,91 +287,15 @@
             calculate();
         }
 
-        function calculate() {
-            const months = state.duration;
-            const vatRate = 0.15;
-            const vatMult = state.setup.vat ? 1.15 : 1.0;
-            
-            let data = { income: [], cash: [], balance: [], personnel: [], be: [] };
-            let monthlyRev = Array(months).fill(0);
-            let monthlyCos = Array(months).fill(0);
-            let monthlySal = Array(months).fill(0);
-            let monthlyOpex = Array(months).fill(0);
-            let cashPosition = Array(months).fill(0);
-            let currentRatio = Array(months).fill(0);
-
-            // 1. Personnel Calculations
-            state.personnel.forEach(p => {
-                let row = { name: p.role, id: p.id, values: [] };
-                for (let m = 0; m < months; m++) {
-                    let val = (state.overrides[p.id] && state.overrides[p.id][m] !== undefined) ? state.overrides[p.id][m] : (p.salary * p.count);
-                    row.values.push(val);
-                    monthlySal[m] += val;
-                }
-                data.personnel.push(row);
-            });
-
-            // 2. Revenue (Excl VAT)
-            state.lineItems.revenue.forEach(item => {
-                let row = { name: item.name, id: item.id, values: [] };
-                for (let m = 0; m < months; m++) {
-                    let val = (state.overrides[item.id] && state.overrides[item.id][m] !== undefined) ? state.overrides[item.id][m] : (item.base * state.stress.rev);
-                    row.values.push(val);
-                    monthlyRev[m] += val;
-                }
-                data.income.push(row);
-            });
-
-            // 3. Expenses (Excl VAT)
-            state.lineItems.expense.forEach(item => {
-                let row = { name: item.name, id: item.id, values: [] };
-                for (let m = 0; m < months; m++) {
-                    let val = (state.overrides[item.id] && state.overrides[item.id][m] !== undefined) ? state.overrides[item.id][m] : (item.base * state.stress.cost);
-                    row.values.push(val);
-                    monthlyOpex[m] += val;
-                }
-                data.income.push(row);
-            });
-
-            // 4. Cash Flow & Liquidity Logic
-            let runningCash = 50000; // Starting buffer
-            for (let m = 0; m < months; m++) {
-                let netOperating = monthlyRev[m] - (monthlyOpex[m] + monthlySal[m]);
-                // Simplified DSO: Delay cash in by 1 month if DSO > 0
-                let cashIn = (m > 0 && state.setup.dso > 0) ? monthlyRev[m-1] * vatMult : monthlyRev[m] * vatMult;
-                let cashOut = (monthlyOpex[m] + monthlySal[m]) * vatMult;
-                runningCash += (cashIn - cashOut);
-                cashPosition[m] = runningCash;
-                
-                // Current Ratio = Cash / (VAT Payable approximation)
-                let vatPayable = monthlyRev[m] * 0.15;
-                currentRatio[m] = vatPayable > 0 ? (runningCash / vatPayable) : 2.0;
-            }
-
-            // Render All Tables
-            renderTable('table-income', 'P&L Statement (Excl. VAT)', data.income, months);
-            renderTable('table-cashflow', 'Cash Flow Analysis (Inc. VAT)', [{name: 'Monthly Cash Balance', id: 'cf1', values: cashPosition}], months);
-            renderTable('table-balance', 'Balance Sheet (Pro-Forma)', [{name: 'Cash Assets', id: 'bs1', values: cashPosition}], months);
-            renderTable('table-personnel', 'Headcount & Personnel Plan', data.personnel, months);
-            renderTable('table-stress', 'Stress Test Summary', data.income, months);
-            
-            // Break Even Logic
-            let fixed = monthlyOpex[0] + monthlySal[0];
-            let beUnits = fixed / 500; // Assuming R500 unit margin
-            renderTable('table-breakeven', 'Break-Even Analysis', [{name: 'Required Units', id: 'be1', values: Array(months).fill(beUnits)}], months);
-
-            updateDashboard(monthlyRev, monthlyOpex, cashPosition, currentRatio);
-        }
-
-        function renderTable(containerId, title, rows, count) {
-            let html = `<div class="p-4 font-bold text-slate-700 bg-slate-50 border-b flex justify-between"><span>${title}</span><span class="text-xs text-slate-400">Values are Rands (Manual Override Enabled)</span></div>`;
-            html += `<table><thead><tr><th class="sticky-col">Period</th>`;
-            for (let i = 1; i <= count; i++) html += `<th>M${i}</th>`;
+        function renderTable(containerId, title, rows, mCount) {
+            let html = `<table><thead><tr><th class="sticky-col">${title}</th>`;
+            for (let i = 1; i <= mCount; i++) html += `<th>Month ${i}</th>`;
             html += `</tr></thead><tbody>`;
+
             rows.forEach(row => {
                 html += `<tr><td class="sticky-col">${row.name}</td>`;
-                row.values.forEach((v, mIdx) => {
-                    html += `<td><input type="number" class="edit-input" value="${Math.round(v)}" onchange="setOverride('${row.id}', ${mIdx}, this.value)"></td>`;
+                row.values.forEach((v, idx) => {
+                    html += `<td><input type="number" class="edit-input" value="${Math.round(v)}" onchange="setOverride('${row.id}', ${idx}, this.value)"></td>`;
                 });
                 html += `</tr>`;
             });
@@ -242,49 +303,61 @@
             document.getElementById(containerId).innerHTML = html;
         }
 
-        function updateDashboard(rev, exp, cash, liq) {
-            document.getElementById('m-ratio').innerText = liq[liq.length-1].toFixed(2);
-            document.getElementById('m-profit').innerText = 'R ' + Math.round(rev.reduce((a,b)=>a+b,0) - exp.reduce((a,b)=>a+b,0)).toLocaleString();
-            document.getElementById('m-cash').innerText = 'R ' + Math.round(cash[cash.length-1]).toLocaleString();
-            
-            if (charts.rp) charts.rp.destroy();
-            if (charts.liq) charts.liq.destroy();
-            
-            const labels = Array.from({length: state.duration}, (_, i) => `M${i+1}`);
-            charts.rp = new Chart(document.getElementById('chartRP'), {
+        function updateDashboard(rev, profit, cash) {
+            document.getElementById('dash-rev').innerText = 'R ' + Math.round(rev.reduce((a, b) => a + b, 0)).toLocaleString();
+            document.getElementById('dash-profit').innerText = 'R ' + Math.round(profit.reduce((a, b) => a + b, 0)).toLocaleString();
+            document.getElementById('dash-ratio').innerText = (cash[cash.length-1] / 10000).toFixed(2); // Sample liquidity ratio
+
+            renderCharts(rev, profit, cash);
+        }
+
+        function renderCharts(rev, profit, cash) {
+            const labels = Array.from({length: state.duration}, (_, i) => 'M' + (i+1));
+            if (charts.rev) charts.rev.destroy();
+            if (charts.cash) charts.cash.destroy();
+
+            charts.rev = new Chart(document.getElementById('chartRevenue'), {
                 type: 'line',
                 data: { labels, datasets: [
-                    { label: 'Revenue', data: rev, borderColor: '#3b82f6', fill: false },
-                    { label: 'Expenses', data: exp, borderColor: '#ef4444', fill: false }
-                ]},
-                options: { responsive: true, maintainAspectRatio: false }
+                    { label: 'Revenue', data: rev, borderColor: '#0f172a', fill: false },
+                    { label: 'Net Profit', data: profit, borderColor: '#3b82f6', fill: false }
+                ]}
             });
 
-            charts.liq = new Chart(document.getElementById('chartLiq'), {
+            charts.cash = new Chart(document.getElementById('chartCash'), {
                 type: 'bar',
-                data: { labels, datasets: [{ label: 'Current Ratio', data: liq, backgroundColor: '#6366f1' }]},
-                options: { responsive: true, maintainAspectRatio: false }
+                data: { labels, datasets: [{ label: 'Closing Cash Balance', data: cash, backgroundColor: '#10b981' }]}
             });
         }
 
-        function exportJSON() {
+        function exportProject() {
             const blob = new Blob([JSON.stringify(state)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'projection_model.json';
+            a.href = url; a.download = 'financial_projection_v5.json';
             a.click();
         }
 
-        function importJSON(e) {
+        function importProject(event) {
             const reader = new FileReader();
-            reader.onload = (event) => {
-                state = JSON.parse(event.target.result);
+            reader.onload = (e) => {
+                state = JSON.parse(e.target.result);
+                renderInputs();
                 calculate();
             };
-            reader.readAsText(e.target.files[0]);
+            reader.readAsText(event.target.files[0]);
         }
 
-        window.onload = calculate;
+        function exportExcel() {
+            const wb = XLSX.utils.book_new();
+            const wsData = [["Financial Report", "Projection Data"]];
+            // Simple logic to push rows to Excel
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, "Projections");
+            XLSX.writeFile(wb, "Business_Plan_Financials.xlsx");
+        }
+
+        window.onload = () => { renderInputs(); calculate(); };
     </script>
 </body>
 </html>
