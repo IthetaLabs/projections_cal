@@ -3,86 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SA Funding-Ready Projection Tool with Dashboard</title>
+    <title>SA Funding Financial Engine</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #f8f9fa; padding: 20px; }
-        .config-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;}
-        .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; height: 350px;}
-        .status-badge { font-size: 0.9rem; }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .table-input { width: 100px; text-align: right; border: 1px solid #dee2e6; border-radius: 4px; }
+        .sticky-top { top: 20px; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        th { background-color: #f8f9fa !important; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col">
-            <h2>SA Business Plan Financial Engine & Dashboard</h2>
-            <p class="text-muted">Funding-ready projections and visualizations for SEFA, DTI, and Private Banks.</p>
-        </div>
-    </div>
-
+<div class="container-fluid py-4">
     <div class="row">
-        <div class="col-lg-3">
-            <div class="config-card">
-                <h5>Business Configuration</h5>
-                <hr>
-                <div class="mb-3">
-                    <label class="form-label">Business Name</label>
-                    <input type="text" id="bizName" class="form-control" value="My SA Startup PTY">
+        <div class="col-lg-7">
+            <div class="card p-4">
+                <h4 class="mb-3">1. Business Setup & Parameters</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Business Name</label>
+                        <input type="text" id="bizName" class="form-control" value="Cape Tech Solutions">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Opening Cash (ZAR)</label>
+                        <input type="number" id="openingBal" class="form-control" value="50000" onchange="updateDashboard()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">COS % (Cost of Sales)</label>
+                        <input type="number" id="cosPct" class="form-control" value="35" onchange="updateDashboard()">
+                    </div>
                 </div>
-                <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="isVATRegistered" checked onchange="updateDashboard()">
-                    <label class="form-check-label">VAT Registered (15%)</label>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="isVATRegistered" checked onchange="updateDashboard()">
+                            <label class="form-check-label">VAT Registered (15%)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="isSBC" checked onchange="updateDashboard()">
+                            <label class="form-check-label">SBC Tax Rates (SARS)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">DSO (Payment Lag)</label>
+                        <select id="dso" class="form-select form-select-sm" onchange="updateDashboard()">
+                            <option value="0">COD (0 Days)</option>
+                            <option value="30" selected>30 Days Lag</option>
+                            <option value="60">60 Days Lag</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-check form-switch mb-3">
-                    <input class="form-check-input" type="checkbox" id="isSBC" checked onchange="updateDashboard()">
-                    <label class="form-check-label">Small Business Corp (SBC) Tax</label>
+            </div>
+
+            <div class="card p-4">
+                <h4 class="mb-3">2. 6-Month Projection Input</h4>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr id="headerRow"><th>Line Item</th></tr>
+                        </thead>
+                        <tbody id="inputBody">
+                            </tbody>
+                    </table>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">DSO (Payment Lag in Days)</label>
-                    <select id="dso" class="form-select" onchange="updateDashboard()">
-                        <option value="0">0 Days (COD)</option>
-                        <option value="30" selected>30 Days (Standard)</option>
-                        <option value="60">60 Days (Corporate/Gov)</option>
-                    </select>
-                </div>
-                <hr>
-                <h5>Scenario Analysis</h5>
-                <div class="mb-3">
-                    <label class="form-label">Sales Performance</label>
-                    <select id="salesMult" class="form-select" onchange="updateDashboard()">
-                        <option value="1.0">100% (Base Case)</option>
-                        <option value="0.8">80% (Pessimistic)</option>
-                        <option value="1.2">120% (Optimistic)</option>
-                    </select>
-                </div>
-                <button onclick="exportExcel()" class="btn btn-primary w-100 mb-2">Generate Funding-Ready Excel</button>
-                 <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
-                    <strong>GitHub Portfolio Value:</strong> Demonstrates integration of financial logic, interactive UI, data visualization (Chart.js), and professional Excel generation (SheetJS). Addresses specific SA regulatory/funding requirements.
-                </div>
+                <p class="text-muted small">* Enter monthly values above to see real-time chart updates.</p>
             </div>
         </div>
 
-        <div class="col-lg-9">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="chart-container">
-                        <canvas id="incomeChart"></canvas>
+        <div class="col-lg-5">
+            <div class="sticky-top">
+                <div class="card p-4 text-center">
+                    <button onclick="exportExcel()" class="btn btn-success btn-lg w-100 mb-2">
+                        Download Funding-Ready Excel
+                    </button>
+                    <div class="d-flex justify-content-around mt-2">
+                        <div><small class="text-muted">Avg. Net Margin</small><br><strong id="statMargin">0%</strong></div>
+                        <div><small class="text-muted">Total Cash Runway</small><br><strong id="statRunway">0 Mo</strong></div>
                     </div>
                 </div>
-                <div class="col-md-6">
+
+                <div class="card p-3">
                     <div class="chart-container">
-                        <canvas id="cashFlowChart"></canvas>
+                        <canvas id="cashChart"></canvas>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
+
+                <div class="card p-3">
                     <div class="chart-container">
-                        <canvas id="ratioChart"></canvas>
+                        <canvas id="profitChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -91,208 +106,142 @@
 </div>
 
 <script>
-    // MOCK STATE - In your full app, this comes from user inputs
-    const state = {
-        setup: {
-            businessName: "My SA Startup",
-            openingBalance: 50000,
-            cosPercentage: 40,
-            periods: [
-                { label: 'Month 1', key: 'm1' }, { label: 'Month 2', key: 'm2' },
-                { label: 'Month 3', key: 'm3' }, { label: 'Month 4', key: 'm4' },
-                { label: 'Month 5', key: 'm5' }, { label: 'Month 6', key: 'm6' }
-            ]
-        },
-        revenueRows: [
-            { key: 'prod1', name: 'Product Sales', values: [20000, 25000, 30000, 35000, 40000, 45000] }
-        ],
-        salaryRows: [
-            { key: 'sal1', name: 'Management', values: [15000, 15000, 15000, 15000, 15000, 15000] }
-        ],
-        expenseRows: [
-            { key: 'rent', name: 'Office Rent', values: [5000, 5000, 5000, 5000, 5000, 5000] }
-        ],
-        startupCosts: [
-            { name: 'Equipment', amount: 20000 },
-            { name: 'Marketing Launch', amount: 10000 }
-        ]
-    };
+    // 1. DATA STRUCTURE
+    const periods = ["Month 1", "Month 2", "Month 3", "Month 4", "Month 5", "Month 6"];
+    const rows = [
+        { label: "Revenue (Sales)", type: "revenue", values: [30000, 45000, 55000, 70000, 85000, 100000] },
+        { label: "Salaries & Wages", type: "salary", values: [15000, 15000, 25000, 25000, 25000, 25000] },
+        { label: "Operating Expenses", type: "expense", values: [8000, 8500, 9000, 9000, 10000, 10000] }
+    ];
 
-    // Global chart instances
-    let incomeChart, cashFlowChart, ratioChart;
+    // 2. INITIALIZE UI
+    function initUI() {
+        const hRow = document.getElementById('headerRow');
+        periods.forEach(p => hRow.innerHTML += `<th>${p}</th>`);
 
-    // Helper to simulate data fetching/overrides
-    function getOverride(rowKey, periodKey, defaultValue) {
-        return defaultValue;
+        const tbody = document.getElementById('inputBody');
+        rows.forEach((row, rIdx) => {
+            let tr = `<tr><td><strong>${row.label}</strong></td>`;
+            row.values.forEach((v, vIdx) => {
+                tr += `<td><input type="number" class="table-input" value="${v}" 
+                        onchange="updateValue(${rIdx}, ${vIdx}, this.value)"></td>`;
+            });
+            tr += `</tr>`;
+            tbody.innerHTML += tr;
+        });
+        initCharts();
+        updateDashboard();
     }
 
-    // SARS SBC Tax Brackets 2024/2025
-    const calculateSBCTax = (annualIncome) => {
-        if (annualIncome <= 95750) return 0;
-        if (annualIncome <= 365000) return (annualIncome - 95750) * 0.07;
-        if (annualIncome <= 550000) return 18848 + (annualIncome - 365000) * 0.21;
-        return 57698 + (annualIncome - 550000) * 0.27;
+    function updateValue(rIdx, vIdx, val) {
+        rows[rIdx].values[vIdx] = parseFloat(val) || 0;
+        updateDashboard();
+    }
+
+    // 3. CALCULATION LOGIC (Incorporating SBC Tax, VAT, and DSO)
+    const calculateSBCTax = (ebit) => {
+        const annual = ebit * 12; // Simple annualized projection
+        if (annual <= 95750) return 0;
+        if (annual <= 365000) return (annual - 95750) * 0.07 / 12;
+        return (57698 + (annual - 550000) * 0.27) / 12;
     };
 
-    function computeProjection(scenario) {
+    function computeData() {
         const isVAT = document.getElementById('isVATRegistered').checked;
         const isSBC = document.getElementById('isSBC').checked;
-        const dsoDays = parseInt(document.getElementById('dso').value);
-        
-        let results = {
-            periods: state.setup.periods,
-            totalRevenue: [], totalCOS: [], grossProfit: [],
-            totalExpenses: [], totalSalaries: [], totalOpCosts: [], operatingProfit: [],
-            incomeTax: [], netProfitAfterTax: [],
-            cashInflows: [], cashOutflows: [], netCashFlow: [], closingCash: [],
-            headcountRows: [], ratios: { currentRatio: [], burnRate: [], runway: [] }
-        };
+        const dso = parseInt(document.getElementById('dso').value);
+        const openingBal = parseFloat(document.getElementById('openingBal').value);
+        const cosPct = parseFloat(document.getElementById('cosPct').value) / 100;
 
-        let runningCash = state.setup.openingBalance;
-        let prevSales = 0;
+        let cash = openingBal;
+        let prevRev = 0;
+        let p = { rev: [], exp: [], profit: [], cash: [], tax: [] };
 
-        state.setup.periods.forEach((period, idx) => {
-            const rev = state.revenueRows[0].values[idx] * scenario.salesMult;
-            const cos = rev * (state.setup.cosPercentage / 100);
-            const sal = state.salaryRows[0].values[idx];
-            const opex = state.expenseRows[0].values[idx];
+        periods.forEach((_, i) => {
+            const rev = rows[0].values[i];
+            const sal = rows[1].values[i];
+            const opex = rows[2].values[i];
+            const cos = rev * cosPct;
             
-            const totalOpCost = cos + opex + sal;
-            const ebit = rev - totalOpCost;
-            const tax = ebit > 0 ? (isSBC ? calculateSBCTax(ebit * 12)/12 : ebit * 0.27) : 0;
-
-            // DSO Logic (Cash lag)
-            const dsoWeight = dsoDays / 30; 
-            const cashFromSales = ((1 - dsoWeight) * rev) + (dsoWeight * prevSales);
+            const totalExp = sal + opex + cos;
+            const ebit = rev - totalExp;
+            const tax = ebit > 0 ? (isSBC ? calculateSBCTax(ebit) : ebit * 0.27) : 0;
             
-            const vatIn = isVAT ? (cashFromSales * 0.15) : 0;
-            const vatOut = isVAT ? ((cos + opex) * 0.15) : 0;
-
-            const totalIn = cashFromSales + vatIn;
-            const totalOut = totalOpCost + tax + vatOut;
-            runningCash += (totalIn - totalOut);
-
-            results.totalRevenue.push(rev);
-            results.totalCOS.push(cos);
-            results.grossProfit.push(rev - cos);
-            results.totalSalaries.push(sal);
-            results.totalExpenses.push(opex);
-            results.totalOpCosts.push(totalOpCost);
-            results.operatingProfit.push(ebit);
-            results.incomeTax.push(tax);
-            results.netProfitAfterTax.push(ebit - tax);
-            results.cashInflows.push(totalIn);
-            results.cashOutflows.push(totalOut);
-            results.closingCash.push(runningCash);
-            results.ratios.currentRatio.push((runningCash / Math.max(1, totalOut)).toFixed(2));
-            results.headcountRows.push(Math.ceil(sal / 15000));
+            // Cash Flow with DSO Lag (30 days = 100% lag)
+            const dsoWeight = dso / 30;
+            const cashIn = ((1 - dsoWeight) * rev) + (dsoWeight * prevRev);
+            const vatFactor = isVAT ? 1.15 : 1;
             
-            prevSales = rev;
+            const monthlyCashIn = cashIn * vatFactor;
+            const monthlyCashOut = (cos + opex) * vatFactor + sal + tax;
+            
+            cash += (monthlyCashIn - monthlyCashOut);
+            
+            p.rev.push(rev);
+            p.exp.push(totalExp);
+            p.profit.push(ebit - tax);
+            p.cash.push(cash);
+            p.tax.push(tax);
+            prevRev = rev;
         });
-
-        results.startupTotal = state.startupCosts.reduce((a, b) => a + b.amount, 0);
-        return results;
+        return p;
     }
 
+    // 4. CHARTING & DASHBOARD
+    let cashChart, profitChart;
+
     function initCharts() {
-        const ctxIncome = document.getElementById('incomeChart').getContext('2d');
-        incomeChart = new Chart(ctxIncome, {
+        cashChart = new Chart(document.getElementById('cashChart'), {
             type: 'line',
-            data: { labels: [], datasets: [] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Revenue vs Total Expenses (Net)' } } }
+            data: { labels: periods, datasets: [{ label: 'Cash Balance (ZAR)', borderColor: '#0d6efd', data: [] }] },
+            options: { maintainAspectRatio: false }
         });
-
-        const ctxCashFlow = document.getElementById('cashFlowChart').getContext('2d');
-        cashFlowChart = new Chart(ctxCashFlow, {
+        profitChart = new Chart(document.getElementById('profitChart'), {
             type: 'bar',
-            data: { labels: [], datasets: [] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Cash Flow & Balance (Incl. VAT)' } } }
-        });
-
-        const ctxRatio = document.getElementById('ratioChart').getContext('2d');
-        ratioChart = new Chart(ctxRatio, {
-            type: 'line',
-            data: { labels: [], datasets: [] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Funding Ratios & Headcount' } }, scales: { y: { beginAtZero: true }, y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } } } }
+            data: { labels: periods, datasets: [{ label: 'Net Profit', backgroundColor: '#198754', data: [] }] },
+            options: { maintainAspectRatio: false }
         });
     }
 
     function updateDashboard() {
-        const salesMult = parseFloat(document.getElementById('salesMult').value);
-        const p = computeProjection({ salesMult });
-        const labels = p.periods.map(p => p.label);
+        const data = computeData();
+        cashChart.data.datasets[0].data = data.cash;
+        profitChart.data.datasets[0].data = data.profit;
+        cashChart.update();
+        profitChart.update();
 
-        // Update Income Chart
-        incomeChart.data = {
-            labels: labels,
-            datasets: [
-                { label: 'Revenue', data: p.totalRevenue, borderColor: '#28a745', fill: false },
-                { label: 'Total Expenses', data: p.totalOpCosts, borderColor: '#dc3545', fill: false }
-            ]
-        };
-        incomeChart.update();
-
-        // Update Cash Flow Chart
-        cashFlowChart.data = {
-            labels: labels,
-            datasets: [
-                { label: 'Cash Inflows', data: p.cashInflows, backgroundColor: 'rgba(40, 167, 69, 0.5)', type: 'bar' },
-                { label: 'Cash Outflows', data: p.cashOutflows, backgroundColor: 'rgba(220, 53, 69, 0.5)', type: 'bar' },
-                { label: 'Closing Cash', data: p.closingCash, borderColor: '#007bff', type: 'line', fill: false }
-            ]
-        };
-        cashFlowChart.update();
-
-        // Update Ratio Chart
-        ratioChart.data = {
-            labels: labels,
-            datasets: [
-                { label: 'Current Ratio', data: p.ratios.currentRatio, borderColor: '#ffc107', fill: false, yAxisID: 'y' },
-                { label: 'Headcount', data: p.headcountRows, borderColor: '#17a2b8', fill: false, yAxisID: 'y1' }
-            ]
-        };
-        ratioChart.update();
+        // Stats
+        const avgMargin = (data.profit.reduce((a,b)=>a+b,0) / data.rev.reduce((a,b)=>a+b,0)) * 100;
+        document.getElementById('statMargin').innerText = avgMargin.toFixed(1) + "%";
+        
+        const runway = data.cash.filter(c => c > 0).length;
+        document.getElementById('statRunway').innerText = runway === 6 ? "6+ Mo" : runway + " Mo";
     }
 
+    // 5. EXPORT
     function exportExcel() {
-        const bizName = document.getElementById('bizName').value;
-        const salesMult = parseFloat(document.getElementById('salesMult').value);
-        const p = computeProjection({ salesMult });
-
+        const p = computeData();
+        const biz = document.getElementById('bizName').value;
         const wb = XLSX.utils.book_new();
-
-        const makeSheet = (rows) => XLSX.utils.aoa_to_sheet([[bizName.toUpperCase()], ...rows]);
-
-        const incomeRows = [
-            ['Line Item', ...p.periods.map(p => p.label)],
-            ['Revenue', ...p.totalRevenue],
-            ['Gross Profit', ...p.grossProfit],
-            ['Salaries', ...p.totalSalaries],
-            ['OpEx', ...p.totalExpenses],
-            ['EBIT', ...p.operatingProfit],
-            ['Tax', ...p.incomeTax],
-            ['Net Profit After Tax', ...p.netProfitAfterTax]
+        
+        const aoa = [
+            [biz.toUpperCase()],
+            ["Financial Projections (6-Month Forecast)"],
+            ["", ...periods],
+            ["Revenue", ...p.rev],
+            ["Total Expenses", ...p.exp],
+            ["Tax (SBC Scale)", ...p.tax],
+            ["Net Profit After Tax", ...p.profit],
+            ["", ""],
+            ["Cash Position", ...p.cash]
         ];
 
-        const fundingRows = [
-            ['KPIs', ...p.periods.map(p => p.label)],
-            ['Headcount', ...p.headcountRows],
-            ['Current Ratio', ...p.ratios.currentRatio],
-            ['Cash Balance', ...p.closingCash]
-        ];
-
-        XLSX.utils.book_append_sheet(wb, makeSheet(fundingRows), 'Funding Metrics');
-        XLSX.utils.book_append_sheet(wb, makeSheet(incomeRows), 'Income Statement');
-
-        XLSX.writeFile(wb, `${bizName}_Projections.xlsx`);
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        XLSX.utils.book_append_sheet(wb, ws, "Projections");
+        XLSX.writeFile(wb, `${biz}_Financials.xlsx`);
     }
 
-    // Initialize charts and dashboard on load
-    window.onload = function() {
-        initCharts();
-        updateDashboard();
-    };
+    window.onload = initUI;
 </script>
-
 </body>
 </html>
