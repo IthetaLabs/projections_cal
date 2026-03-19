@@ -497,7 +497,7 @@
     <section class="tab-panel" id="expenses">
       <div class="card">
         <h2>Operating Expenses</h2>
-        <p class="desc">This tab captures both pre-sales/start-up costs and ongoing monthly operating expenses. Use it for rent, software, marketing, admin, travel, insurance and all other overheads.</p>
+        <p class="desc">This tab captures ongoing monthly operating expenses. Use it for rent, software, marketing, admin, travel, insurance and all other overheads.</p>
         <div class="line-actions">
           <button class="secondary" id="addExpenseBtn">Add Expense Line</button>
           <button class="secondary" id="loadDefaultExpensesBtn">Load Default Expense List</button>
@@ -507,7 +507,6 @@
             <thead>
               <tr>
                 <th>Expense</th>
-                <th class="right">Pre-sales</th>
                 <th class="right">Per month</th>
                 <th class="right">Annual increase %</th>
                 <th class="right">Start month</th>
@@ -530,7 +529,7 @@
             <div class="field"><label for="loanAmount">Loan amount</label><input type="number" id="loanAmount" min="0" step="0.01" value="350000" /></div>
             <div class="field"><label for="loanTerm">Loan term (months)</label><input type="number" id="loanTerm" min="1" max="600" value="60" /></div>
             <div class="field"><label for="interestRate">Annual interest rate %</label><input type="number" id="interestRate" min="0" max="100" step="0.01" value="10.25" /></div>
-            <div class="field"><label for="deposits">Deposits / other startup deposits</label><input type="number" id="deposits" min="0" step="0.01" value="0" /></div>
+            <div class="field"><label for="deposits">Other startup deposits</label><input type="number" id="deposits" min="0" step="0.01" value="0" /></div>
             <div class="field"><label for="assetPurchase">Cost of assets purchased</label><input type="number" id="assetPurchase" min="0" step="0.01" value="120000" /></div>
             <div class="field"><label for="assetLifeYears">Useful life of assets (years)</label><input type="number" id="assetLifeYears" min="1" max="50" step="1" value="5" /></div>
             <div class="field"><label for="openingCash">Manual opening cash</label><input type="number" id="openingCash" min="0" step="0.01" value="0" /></div>
@@ -538,7 +537,7 @@
         </div>
         <div class="card">
           <h2>Loan Usage</h2>
-          <p class="desc">This section shows the financing summary. It indicates the monthly repayment, total repayable amount and how much of the initial capital is used by pre-sales costs and asset purchases.</p>
+          <p class="desc">This section shows the financing summary. It indicates the monthly repayment, total repayable amount and how much of the initial capital is used by deposits and asset purchases.</p>
           <div class="summary-cards" style="grid-template-columns:repeat(2,minmax(0,1fr));">
             <div class="summary-card"><div class="label">Monthly interest rate</div><div class="value" id="loanMonthlyRate">0.00%</div></div>
             <div class="summary-card"><div class="label">Monthly repayment</div><div class="value" id="loanRepayment">R 0</div></div>
@@ -554,7 +553,7 @@
       <div class="card">
         <h2>Financial Statements</h2>
         <p class="desc">This tab presents the projected Income Statement, Cash Flow Statement and Balance Sheet. Values are pre-filled from the model but can also be edited directly for presentation purposes. Recalculate rebuilds everything from the inputs again.</p>
-        <div class="manual-note">Editable outputs are useful when you need final polishing for a business plan. Direct edits are local to the visible report tables and are included in exports.</div>
+        <div class="manual-note">Editable outputs are useful when you need final polishing for a business plan. Direct edits are included in exports and now flow across linked statements.</div>
         <div class="line-actions">
           <button class="secondary" id="refreshStatementsBtn">Refresh Visible Statements</button>
         </div>
@@ -628,13 +627,18 @@
         { role: 'Operations Staff', people: 2, salary: 18000, increase: 6, startMonth: 1, department: 'Operations' }
       ],
       expenseLines: [
-        { name: 'Rent', presales: 0, monthly: 15000, increase: 6, startMonth: 1 },
-        { name: 'Advertising and promotions', presales: 25000, monthly: 12000, increase: 8, startMonth: 1 },
-        { name: 'Telephone, postage and internet', presales: 0, monthly: 3500, increase: 5, startMonth: 1 },
-        { name: 'Web hosting', presales: 0, monthly: 1200, increase: 5, startMonth: 1 },
-        { name: 'Accounting and audit fees', presales: 0, monthly: 4000, increase: 6, startMonth: 1 }
+        { name: 'Rent', monthly: 15000, increase: 6, startMonth: 1 },
+        { name: 'Advertising and promotions', monthly: 12000, increase: 8, startMonth: 1 },
+        { name: 'Telephone, postage and internet', monthly: 3500, increase: 5, startMonth: 1 },
+        { name: 'Web hosting', monthly: 1200, increase: 5, startMonth: 1 },
+        { name: 'Accounting and audit fees', monthly: 4000, increase: 6, startMonth: 1 }
       ],
       manualTables: {
+        income: null,
+        cash: null,
+        balance: null
+      },
+      baseTables: {
         income: null,
         cash: null,
         balance: null
@@ -657,11 +661,6 @@
 
     function formatPct(v) {
       return `${Number(v || 0).toFixed(2)}%`;
-    }
-
-    function num(v) {
-      const n = parseFloat(v);
-      return Number.isFinite(n) ? n : 0;
     }
 
     function clamp(v, min, max) {
@@ -769,7 +768,6 @@
 
       state.expenseLines = (state.expenseLines || []).map(line => ({
         name: sanitizeText(line.name || 'Expense'),
-        presales: safeNum(line.presales, 0, 100000000),
         monthly: safeNum(line.monthly, 0, 100000000),
         increase: safeNum(line.increase, -100, 1000),
         startMonth: clamp(Math.round(safeNum(line.startMonth, 1, 60)), 1, 60)
@@ -898,33 +896,27 @@
 
         const c2 = document.createElement('td');
         c2.className = 'right';
-        const presales = createInput('number', line.presales, '0.01', 0, 100000000);
-        presales.dataset.field = 'presales';
-        c2.appendChild(presales);
+        const monthly = createInput('number', line.monthly, '0.01', 0, 100000000);
+        monthly.dataset.field = 'monthly';
+        c2.appendChild(monthly);
 
         const c3 = document.createElement('td');
         c3.className = 'right';
-        const monthly = createInput('number', line.monthly, '0.01', 0, 100000000);
-        monthly.dataset.field = 'monthly';
-        c3.appendChild(monthly);
+        const increase = createInput('number', line.increase, '0.01', -100, 1000);
+        increase.dataset.field = 'increase';
+        c3.appendChild(increase);
 
         const c4 = document.createElement('td');
         c4.className = 'right';
-        const increase = createInput('number', line.increase, '0.01', -100, 1000);
-        increase.dataset.field = 'increase';
-        c4.appendChild(increase);
-
-        const c5 = document.createElement('td');
-        c5.className = 'right';
         const startMonth = createInput('number', line.startMonth, '1', 1, 60);
         startMonth.dataset.field = 'startMonth';
-        c5.appendChild(startMonth);
+        c4.appendChild(startMonth);
 
-        const c6 = document.createElement('td');
-        c6.className = 'center';
-        c6.appendChild(createRemoveButton('expense', idx));
+        const c5 = document.createElement('td');
+        c5.className = 'center';
+        c5.appendChild(createRemoveButton('expense', idx));
 
-        tr.append(c1, c2, c3, c4, c5, c6);
+        tr.append(c1, c2, c3, c4, c5);
         tbody.appendChild(tr);
       });
 
@@ -1019,7 +1011,7 @@
       const overheads = Array(months).fill(0);
       const depreciation = Array(months).fill(0);
       const otherIncome = Array(months).fill(0);
-      const preSalesTotal = state.expenseLines.reduce((sum, x) => sum + safeNum(x.presales, 0, 100000000), 0) + safeNum(q('deposits').value, 0, 100000000);
+      const startupDeposits = safeNum(q('deposits').value, 0, 100000000);
 
       state.revenueLines.forEach(line => {
         const startIdx = Math.max(0, clamp(line.startMonth - 1, 0, months - 1));
@@ -1097,12 +1089,11 @@
       const ebit = Array(months).fill(0);
       const tax = Array(months).fill(0);
       const grossProfit = Array(months).fill(0);
-      const operatingProfit = Array(months).fill(0);
       const cfo = Array(months).fill(0);
       const cfi = Array(months).fill(0);
       const cff = Array(months).fill(0);
 
-      const openingCash = safeNum(q('openingCash').value, 0, 100000000) + safeNum(q('equityAmount').value, 0, 100000000) + loanAmount - preSalesTotal - assetPurchase;
+      const openingCash = safeNum(q('openingCash').value, 0, 100000000) + safeNum(q('equityAmount').value, 0, 100000000) + loanAmount - startupDeposits - assetPurchase;
 
       let prevAR = 0, prevInv = 0, prevAP = 0, prevCash = openingCash, prevRetained = 0;
       let currentPPE = assetPurchase;
@@ -1113,7 +1104,6 @@
         grossProfit[i] = revenue[i] - directCost[i];
         ebitda[i] = grossProfit[i] + otherIncome[i] - payroll[i] - overheads[i];
         ebit[i] = ebitda[i] - depreciation[i];
-        operatingProfit[i] = ebit[i];
         const pbt = ebit[i] - interest[i];
         tax[i] = Math.max(0, pbt * taxRate);
         netProfit[i] = pbt - tax[i];
@@ -1199,8 +1189,8 @@
       q('loanMonthlyRate').textContent = formatPct(monthlyRate * 100);
       q('loanRepayment').textContent = formatCurrency(monthlyRepayment);
       q('loanTotalRepayable').textContent = formatCurrency(monthlyRepayment * Math.min(months, loanTerm));
-      q('loanRemaining').textContent = formatCurrency(Math.max(0, loanAmount - preSalesTotal - assetPurchase));
-      q('fundingSummaryText').textContent = `Opening capital equals equity + debt + manual opening cash less pre-sales costs and asset purchases. VAT is approximated on a two-month payment cycle and tax on six-month provisional settlement timing for planning use.`;
+      q('loanRemaining').textContent = formatCurrency(Math.max(0, loanAmount - startupDeposits - assetPurchase));
+      q('fundingSummaryText').textContent = `Opening capital equals equity + debt + manual opening cash less deposits and asset purchases. VAT is approximated on a two-month payment cycle and tax on six-month provisional settlement timing for planning use.`;
 
       return {
         labels: labelsOut,
@@ -1235,6 +1225,10 @@
         vatPaid: seriesMap.vatPaid,
         taxPaid: seriesMap.taxPaid
       };
+    }
+
+    function cloneRows(rows) {
+      return JSON.parse(JSON.stringify(rows));
     }
 
     function createEditableStatementTable(tableId, rows, labels, cacheKey) {
@@ -1277,10 +1271,12 @@
           input.dataset.col = cIdx;
 
           input.addEventListener('input', () => {
-            if (!state.manualTables[cacheKey]) state.manualTables[cacheKey] = JSON.parse(JSON.stringify(rows));
+            if (!state.manualTables[cacheKey]) state.manualTables[cacheKey] = cloneRows(rows);
             const r = Number(input.dataset.row);
             const c = Number(input.dataset.col);
             state.manualTables[cacheKey][r].values[c] = safeNum(input.value, -100000000000, 100000000000);
+            syncManualTables(cacheKey);
+            refreshAllStatementInputsFromState();
             refreshDashboardFromTables(labels);
           });
 
@@ -1291,6 +1287,195 @@
         tbody.appendChild(tr);
       });
       table.appendChild(tbody);
+    }
+
+    function getBaseRow(tableKey, label) {
+      return (state.baseTables[tableKey] || []).find(r => r.label === label);
+    }
+
+    function getManualRow(tableKey, label) {
+      return (state.manualTables[tableKey] || []).find(r => r.label === label);
+    }
+
+    function recalcIncomeRows() {
+      const revenue = getManualRow('income', 'Revenue')?.values || [];
+      const otherIncome = getManualRow('income', 'Other income')?.values || [];
+      const cost = getManualRow('income', 'Cost of sales')?.values || [];
+      const payroll = getManualRow('income', 'Payroll')?.values || [];
+      const opex = getManualRow('income', 'Operating expenses')?.values || [];
+      const dep = getManualRow('income', 'Depreciation')?.values || [];
+      const finance = getManualRow('income', 'Finance costs')?.values || [];
+      const tax = getManualRow('income', 'Tax')?.values || [];
+
+      const gross = getManualRow('income', 'Gross profit');
+      const ebitda = getManualRow('income', 'EBITDA');
+      const ebit = getManualRow('income', 'EBIT');
+      const net = getManualRow('income', 'Net profit');
+
+      for (let i = 0; i < revenue.length; i++) {
+        gross.values[i] = Number(revenue[i] || 0) + Number(cost[i] || 0);
+        ebitda.values[i] = Number(gross.values[i] || 0) + Number(otherIncome[i] || 0) + Number(payroll[i] || 0) + Number(opex[i] || 0);
+        ebit.values[i] = Number(ebitda.values[i] || 0) + Number(dep[i] || 0);
+        net.values[i] = Number(ebit.values[i] || 0) + Number(finance[i] || 0) + Number(tax[i] || 0);
+      }
+    }
+
+    function syncFromIncomeToCashAndBalance() {
+      const baseNP = getBaseRow('income', 'Net profit')?.values || [];
+      const manualNP = getManualRow('income', 'Net profit')?.values || [];
+      const baseCFO = getBaseRow('cash', 'Operating cash flow')?.values || [];
+      const baseCFI = getBaseRow('cash', 'Investing cash flow')?.values || [];
+      const baseCFF = getBaseRow('cash', 'Financing cash flow')?.values || [];
+      const baseClosingCash = getBaseRow('cash', 'Closing cash')?.values || [];
+      const baseEquity = getBaseRow('balance', 'Equity')?.values || [];
+      const baseCashBal = getBaseRow('balance', 'Cash')?.values || [];
+      const baseAR = getBaseRow('balance', 'Trade receivables')?.values || [];
+      const baseInv = getBaseRow('balance', 'Inventory')?.values || [];
+      const basePPE = getBaseRow('balance', 'Property, plant and equipment')?.values || [];
+      const baseLiabTotalNeg = getBaseRow('balance', 'Total liabilities')?.values || [];
+      const baseTradePay = getBaseRow('balance', 'Trade payables')?.values || [];
+      const baseVAT = getBaseRow('balance', 'VAT payable / (receivable)')?.values || [];
+      const baseTax = getBaseRow('balance', 'Tax payable')?.values || [];
+      const baseBorrow = getBaseRow('balance', 'Borrowings')?.values || [];
+
+      const cashOp = getManualRow('cash', 'Operating cash flow');
+      const cashInv = getManualRow('cash', 'Investing cash flow');
+      const cashFin = getManualRow('cash', 'Financing cash flow');
+      const cashNet = getManualRow('cash', 'Net cash movement');
+      const cashClose = getManualRow('cash', 'Closing cash');
+
+      const balCash = getManualRow('balance', 'Cash');
+      const balAR = getManualRow('balance', 'Trade receivables');
+      const balInv = getManualRow('balance', 'Inventory');
+      const balPPE = getManualRow('balance', 'Property, plant and equipment');
+      const balAssets = getManualRow('balance', 'Total assets');
+      const balTradePay = getManualRow('balance', 'Trade payables');
+      const balVAT = getManualRow('balance', 'VAT payable / (receivable)');
+      const balTax = getManualRow('balance', 'Tax payable');
+      const balBorrow = getManualRow('balance', 'Borrowings');
+      const balLiab = getManualRow('balance', 'Total liabilities');
+      const balEquity = getManualRow('balance', 'Equity');
+      const balLiabEq = getManualRow('balance', 'Liabilities + equity');
+
+      let cumulativeNPDelta = 0;
+      const baseOpeningCash = (baseClosingCash[0] || 0) - ((baseCFO[0] || 0) + (baseCFI[0] || 0) + (baseCFF[0] || 0));
+
+      for (let i = 0; i < manualNP.length; i++) {
+        const deltaNP = Number(manualNP[i] || 0) - Number(baseNP[i] || 0);
+        cumulativeNPDelta += deltaNP;
+
+        cashOp.values[i] = Number(baseCFO[i] || 0) + deltaNP;
+        cashInv.values[i] = Number(cashInv.values[i] ?? baseCFI[i] ?? 0);
+        cashFin.values[i] = Number(cashFin.values[i] ?? baseCFF[i] ?? 0);
+        cashNet.values[i] = Number(cashOp.values[i] || 0) + Number(cashInv.values[i] || 0) + Number(cashFin.values[i] || 0);
+        cashClose.values[i] = (i === 0 ? baseOpeningCash : Number(cashClose.values[i - 1] || 0)) + Number(cashNet.values[i] || 0);
+
+        balCash.values[i] = Number(cashClose.values[i] || 0);
+        balAR.values[i] = Number(balAR.values[i] ?? baseAR[i] ?? 0);
+        balInv.values[i] = Number(balInv.values[i] ?? baseInv[i] ?? 0);
+        balPPE.values[i] = Number(balPPE.values[i] ?? basePPE[i] ?? 0);
+
+        balTradePay.values[i] = Number(balTradePay.values[i] ?? baseTradePay[i] ?? 0);
+        balVAT.values[i] = Number(balVAT.values[i] ?? baseVAT[i] ?? 0);
+        balTax.values[i] = Number(balTax.values[i] ?? baseTax[i] ?? 0);
+        balBorrow.values[i] = Number(balBorrow.values[i] ?? baseBorrow[i] ?? 0);
+
+        balAssets.values[i] = Number(balCash.values[i] || 0) + Number(balAR.values[i] || 0) + Number(balInv.values[i] || 0) + Number(balPPE.values[i] || 0);
+        balLiab.values[i] = -(Math.abs(Number(balTradePay.values[i] || 0)) + Math.abs(Number(balVAT.values[i] || 0)) + Math.abs(Number(balTax.values[i] || 0)) + Math.abs(Number(balBorrow.values[i] || 0)));
+        balEquity.values[i] = Number(baseEquity[i] || 0) + cumulativeNPDelta;
+        balLiabEq.values[i] = Math.abs(Number(balLiab.values[i] || 0)) + Number(balEquity.values[i] || 0);
+      }
+    }
+
+    function recalcCashRowsFromManual() {
+      const cashOp = getManualRow('cash', 'Operating cash flow');
+      const cashInv = getManualRow('cash', 'Investing cash flow');
+      const cashFin = getManualRow('cash', 'Financing cash flow');
+      const cashNet = getManualRow('cash', 'Net cash movement');
+      const cashClose = getManualRow('cash', 'Closing cash');
+      const baseCFO = getBaseRow('cash', 'Operating cash flow')?.values || [];
+      const baseCFI = getBaseRow('cash', 'Investing cash flow')?.values || [];
+      const baseCFF = getBaseRow('cash', 'Financing cash flow')?.values || [];
+      const baseClosing = getBaseRow('cash', 'Closing cash')?.values || [];
+      const openingCash = (baseClosing[0] || 0) - ((baseCFO[0] || 0) + (baseCFI[0] || 0) + (baseCFF[0] || 0));
+
+      for (let i = 0; i < cashOp.values.length; i++) {
+        cashNet.values[i] = Number(cashOp.values[i] || 0) + Number(cashInv.values[i] || 0) + Number(cashFin.values[i] || 0);
+        cashClose.values[i] = (i === 0 ? openingCash : Number(cashClose.values[i - 1] || 0)) + Number(cashNet.values[i] || 0);
+      }
+    }
+
+    function syncFromCashToBalance() {
+      const cashClose = getManualRow('cash', 'Closing cash');
+      const balCash = getManualRow('balance', 'Cash');
+      const balAR = getManualRow('balance', 'Trade receivables');
+      const balInv = getManualRow('balance', 'Inventory');
+      const balPPE = getManualRow('balance', 'Property, plant and equipment');
+      const balAssets = getManualRow('balance', 'Total assets');
+      const balTradePay = getManualRow('balance', 'Trade payables');
+      const balVAT = getManualRow('balance', 'VAT payable / (receivable)');
+      const balTax = getManualRow('balance', 'Tax payable');
+      const balBorrow = getManualRow('balance', 'Borrowings');
+      const balLiab = getManualRow('balance', 'Total liabilities');
+      const balEquity = getManualRow('balance', 'Equity');
+      const balLiabEq = getManualRow('balance', 'Liabilities + equity');
+
+      for (let i = 0; i < cashClose.values.length; i++) {
+        balCash.values[i] = Number(cashClose.values[i] || 0);
+        balAssets.values[i] = Number(balCash.values[i] || 0) + Number(balAR.values[i] || 0) + Number(balInv.values[i] || 0) + Number(balPPE.values[i] || 0);
+        balLiab.values[i] = -(Math.abs(Number(balTradePay.values[i] || 0)) + Math.abs(Number(balVAT.values[i] || 0)) + Math.abs(Number(balTax.values[i] || 0)) + Math.abs(Number(balBorrow.values[i] || 0)));
+        balLiabEq.values[i] = Math.abs(Number(balLiab.values[i] || 0)) + Number(balEquity.values[i] || 0);
+      }
+    }
+
+    function recalcBalanceRows() {
+      const balCash = getManualRow('balance', 'Cash');
+      const balAR = getManualRow('balance', 'Trade receivables');
+      const balInv = getManualRow('balance', 'Inventory');
+      const balPPE = getManualRow('balance', 'Property, plant and equipment');
+      const balAssets = getManualRow('balance', 'Total assets');
+      const balTradePay = getManualRow('balance', 'Trade payables');
+      const balVAT = getManualRow('balance', 'VAT payable / (receivable)');
+      const balTax = getManualRow('balance', 'Tax payable');
+      const balBorrow = getManualRow('balance', 'Borrowings');
+      const balLiab = getManualRow('balance', 'Total liabilities');
+      const balEquity = getManualRow('balance', 'Equity');
+      const balLiabEq = getManualRow('balance', 'Liabilities + equity');
+
+      for (let i = 0; i < balCash.values.length; i++) {
+        balAssets.values[i] = Number(balCash.values[i] || 0) + Number(balAR.values[i] || 0) + Number(balInv.values[i] || 0) + Number(balPPE.values[i] || 0);
+        balLiab.values[i] = -(Math.abs(Number(balTradePay.values[i] || 0)) + Math.abs(Number(balVAT.values[i] || 0)) + Math.abs(Number(balTax.values[i] || 0)) + Math.abs(Number(balBorrow.values[i] || 0)));
+        balLiabEq.values[i] = Math.abs(Number(balLiab.values[i] || 0)) + Number(balEquity.values[i] || 0);
+      }
+    }
+
+    function syncManualTables(sourceTable) {
+      if (!state.manualTables.income || !state.manualTables.cash || !state.manualTables.balance) return;
+
+      if (sourceTable === 'income') {
+        recalcIncomeRows();
+        syncFromIncomeToCashAndBalance();
+      } else if (sourceTable === 'cash') {
+        recalcCashRowsFromManual();
+        syncFromCashToBalance();
+      } else if (sourceTable === 'balance') {
+        recalcBalanceRows();
+      }
+    }
+
+    function refreshAllStatementInputsFromState() {
+      ['incomeStatementTable', 'cashFlowTable', 'balanceSheetTable'].forEach((tableId) => {
+        const table = q(tableId);
+        const tableKey = tableId === 'incomeStatementTable' ? 'income' : tableId === 'cashFlowTable' ? 'cash' : 'balance';
+        const rows = state.manualTables[tableKey] || [];
+        table.querySelectorAll('.output-edit').forEach(inp => {
+          const r = Number(inp.dataset.row);
+          const c = Number(inp.dataset.col);
+          if (rows[r] && rows[r].values[c] !== undefined && document.activeElement !== inp) {
+            inp.value = Number(rows[r].values[c]).toFixed(2);
+          }
+        });
+      });
     }
 
     function renderStatements() {
@@ -1334,13 +1519,17 @@
         { label: 'Liabilities + equity', values: d.liabilities.map((v, i) => v + d.equity[i]) }
       ];
 
+      state.baseTables.income = cloneRows(incomeRows);
+      state.baseTables.cash = cloneRows(cashRows);
+      state.baseTables.balance = cloneRows(balanceRows);
+
       createEditableStatementTable('incomeStatementTable', incomeRows, d.labels, 'income');
       createEditableStatementTable('cashFlowTable', cashRows, d.labels, 'cash');
       createEditableStatementTable('balanceSheetTable', balanceRows, d.labels, 'balance');
 
-      if (!state.manualTables.income) state.manualTables.income = JSON.parse(JSON.stringify(incomeRows));
-      if (!state.manualTables.cash) state.manualTables.cash = JSON.parse(JSON.stringify(cashRows));
-      if (!state.manualTables.balance) state.manualTables.balance = JSON.parse(JSON.stringify(balanceRows));
+      if (!state.manualTables.income) state.manualTables.income = cloneRows(incomeRows);
+      if (!state.manualTables.cash) state.manualTables.cash = cloneRows(cashRows);
+      if (!state.manualTables.balance) state.manualTables.balance = cloneRows(balanceRows);
 
       refreshDashboardFromTables(d.labels);
     }
@@ -1520,8 +1709,14 @@
       Object.entries(data.funding || {}).forEach(([k, v]) => { if (q(k)) q(k).value = v; });
       state.revenueLines = data.revenueLines || [];
       state.salaryLines = data.salaryLines || [];
-      state.expenseLines = data.expenseLines || [];
+      state.expenseLines = (data.expenseLines || []).map(x => ({
+        name: x.name,
+        monthly: x.monthly ?? 0,
+        increase: x.increase ?? 0,
+        startMonth: x.startMonth ?? 1
+      }));
       state.manualTables = data.manualTables || { income: null, cash: null, balance: null };
+      state.baseTables = { income: null, cash: null, balance: null };
       sanitizeState();
       renderRevenueTable();
       renderSalaryTable();
@@ -1734,8 +1929,8 @@
       ws = aoaToSheetWithFormatting(salaryRows, [28, 12, 14, 12, 14, 20], { headerRow: 2, titleRows: [0], subtitleRows: [1], labelCols: [0,5], totalRows: [salaryRows.length - 1], autofilterRef: 'A3:F' + salaryRows.length });
       XLSX.utils.book_append_sheet(wb, ws, 'Salaries');
 
-      const expenseRows = buildInputSheetRows('Operating Expenses', ['name','presales','monthly','increase','startMonth'], state.expenseLines, [1,2]);
-      ws = aoaToSheetWithFormatting(expenseRows, [30, 14, 14, 12, 14], { headerRow: 2, titleRows: [0], subtitleRows: [1], labelCols: [0], totalRows: [expenseRows.length - 1], autofilterRef: 'A3:E' + expenseRows.length });
+      const expenseRows = buildInputSheetRows('Operating Expenses', ['name','monthly','increase','startMonth'], state.expenseLines, [1]);
+      ws = aoaToSheetWithFormatting(expenseRows, [30, 14, 12, 14], { headerRow: 2, titleRows: [0], subtitleRows: [1], labelCols: [0], totalRows: [expenseRows.length - 1], autofilterRef: 'A3:D' + expenseRows.length });
       XLSX.utils.book_append_sheet(wb, ws, 'Expenses');
 
       [
@@ -1785,14 +1980,14 @@
       };
 
       q('addExpenseBtn').onclick = () => {
-        state.expenseLines.push({ name: 'New expense', presales: 0, monthly: 0, increase: 0, startMonth: 1 });
+        state.expenseLines.push({ name: 'New expense', monthly: 0, increase: 0, startMonth: 1 });
         renderExpenseTable();
       };
 
       q('loadDefaultExpensesBtn').onclick = () => {
         defaultExpenses.forEach(name => {
           if (!state.expenseLines.some(x => x.name === name)) {
-            state.expenseLines.push({ name, presales: 0, monthly: 0, increase: 6, startMonth: 1 });
+            state.expenseLines.push({ name, monthly: 0, increase: 6, startMonth: 1 });
           }
         });
         renderExpenseTable();
@@ -1800,6 +1995,7 @@
 
       q('recalcBtn').onclick = () => {
         state.manualTables = { income: null, cash: null, balance: null };
+        state.baseTables = { income: null, cash: null, balance: null };
         renderStatements();
       };
 
