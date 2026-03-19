@@ -232,6 +232,17 @@
       background: #fff;
     }
 
+    .readonly-input {
+      min-width: 90px;
+      padding: 7px 9px;
+      background: #f2f6f9;
+      border: 1px solid #d9e4ec;
+      border-radius: 8px;
+      font-size: 12px;
+      text-align: right;
+      color: var(--muted);
+    }
+
     .line-actions {
       display: flex;
       gap: 8px;
@@ -345,6 +356,18 @@
     .status-warn {
       background: var(--warn-bg);
       color: var(--warn-text);
+    }
+
+    .funding-warning-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #7c5a00;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .funding-warning-list li + li {
+      margin-top: 4px;
     }
 
     @media (max-width: 1200px) {
@@ -522,29 +545,96 @@
     <section class="tab-panel" id="funding">
       <div class="grid-2">
         <div class="card">
-          <h2>Funding and Capital</h2>
-          <p class="desc">This tab sets funding structure. Equity increases opening cash and equity. Debt adds opening cash, then the loan amortisation schedule creates interest expense and financing cash outflows.</p>
+          <h2>Funding Sources</h2>
+          <p class="desc">Differentiate equity, grants and debt to model opening capital correctly and calculate weighted cost of capital.</p>
           <div class="form-grid">
-            <div class="field"><label for="equityAmount">Equity invested</label><input type="number" id="equityAmount" min="0" step="0.01" value="250000" /></div>
-            <div class="field"><label for="loanAmount">Loan amount</label><input type="number" id="loanAmount" min="0" step="0.01" value="350000" /></div>
-            <div class="field"><label for="loanTerm">Loan term (months)</label><input type="number" id="loanTerm" min="1" max="600" value="60" /></div>
-            <div class="field"><label for="interestRate">Annual interest rate %</label><input type="number" id="interestRate" min="0" max="100" step="0.01" value="10.25" /></div>
-            <div class="field"><label for="deposits">Other startup deposits</label><input type="number" id="deposits" min="0" step="0.01" value="0" /></div>
-            <div class="field"><label for="assetPurchase">Cost of assets purchased</label><input type="number" id="assetPurchase" min="0" step="0.01" value="120000" /></div>
-            <div class="field"><label for="assetLifeYears">Useful life of assets (years)</label><input type="number" id="assetLifeYears" min="1" max="50" step="1" value="5" /></div>
-            <div class="field"><label for="openingCash">Manual opening cash</label><input type="number" id="openingCash" min="0" step="0.01" value="0" /></div>
+            <div class="field"><label for="shareholderCapital">Shareholder capital</label><input type="number" id="shareholderCapital" min="0" step="0.01" value="250000" /></div>
+            <div class="field"><label for="retainedEarnings">Retained earnings</label><input type="number" id="retainedEarnings" min="0" step="0.01" value="0" /></div>
+            <div class="field"><label for="grantFunding">Grant funding</label><input type="number" id="grantFunding" min="0" step="0.01" value="0" /></div>
+            <div class="field"><label for="costOfEquity">Cost of equity %</label><input type="number" id="costOfEquity" min="0" max="100" step="0.01" value="18" /></div>
+            <div class="field"><label for="startupCosts">Startup costs / deposits</label><input type="number" id="startupCosts" min="0" step="0.01" value="0" /></div>
+            <div class="field"><label for="workingCapitalMonths">Opening working capital (months)</label><input type="number" id="workingCapitalMonths" min="0" max="24" step="0.1" value="3" /></div>
+            <div class="field"><label for="contingencyPct">Contingency %</label><input type="number" id="contingencyPct" min="0" max="100" step="0.01" value="10" /></div>
+            <div class="field"><label for="openingCash">Manual opening cash override</label><input type="number" id="openingCash" min="0" step="0.01" value="0" /></div>
           </div>
         </div>
+
         <div class="card">
-          <h2>Loan Usage</h2>
-          <p class="desc">This section shows the financing summary. It indicates the monthly repayment, total repayable amount and how much of the initial capital is used by deposits and asset purchases.</p>
-          <div class="summary-cards" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+          <h2>Debt Settings</h2>
+          <p class="desc">Loan assumptions feed interest expense, financing cash flow and the outstanding balance on the balance sheet.</p>
+          <div class="form-grid">
+            <div class="field"><label for="loanAmount">Loan funding</label><input type="number" id="loanAmount" min="0" step="0.01" value="350000" /></div>
+            <div class="field"><label for="loanTerm">Loan term (months)</label><input type="number" id="loanTerm" min="1" max="600" value="60" /></div>
+            <div class="field"><label for="interestRate">Annual interest rate %</label><input type="number" id="interestRate" min="0" max="100" step="0.01" value="10.25" /></div>
+            <div class="field"><label for="gracePeriod">Grace period / moratorium (months)</label><input type="number" id="gracePeriod" min="0" max="60" value="0" /></div>
+            <div class="field"><label for="repaymentType">Repayment type</label>
+              <select id="repaymentType">
+                <option selected value="annuity">Annuity</option>
+                <option value="interest_only">Interest only</option>
+                <option value="bullet">Bullet</option>
+              </select>
+            </div>
+            <div class="field"><label for="compoundingFrequency">Compounding</label>
+              <select id="compoundingFrequency">
+                <option selected value="monthly">Monthly</option>
+                <option value="annual">Annually</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="summary-cards" style="grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:14px;">
             <div class="summary-card"><div class="label">Monthly interest rate</div><div class="value" id="loanMonthlyRate">0.00%</div></div>
             <div class="summary-card"><div class="label">Monthly repayment</div><div class="value" id="loanRepayment">R 0</div></div>
             <div class="summary-card"><div class="label">Total repayable</div><div class="value" id="loanTotalRepayable">R 0</div></div>
-            <div class="summary-card"><div class="label">Unallocated opening loan proceeds</div><div class="value" id="loanRemaining">R 0</div></div>
+            <div class="summary-card"><div class="label">Opening cash position</div><div class="value" id="loanRemaining">R 0</div></div>
           </div>
           <div class="footer-note" id="fundingSummaryText"></div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:14px;">
+        <div class="card">
+          <h2>Capital Expenditure</h2>
+          <p class="desc">Split capex by asset category so depreciation uses cost excluding VAT while opening cash uses the full cash outflow including VAT.</p>
+          <div class="line-actions">
+            <button class="secondary" id="addAssetBtn">Add Asset Line</button>
+          </div>
+          <div class="table-wrap" style="margin-top:12px;">
+            <table id="assetTable">
+              <thead>
+                <tr>
+                  <th>Asset category</th>
+                  <th class="right">Cost ex VAT</th>
+                  <th class="right">VAT on asset</th>
+                  <th class="right">Useful life (years)</th>
+                  <th class="center">Remove</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Capital Summary</h2>
+          <p class="desc">This section converts the funding inputs into capital employed, opening cash and cost of capital rather than treating them as stand-alone boxes.</p>
+
+          <div class="summary-cards" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+            <div class="summary-card"><div class="label">Total funding</div><div class="value" id="sumTotalFunding">R 0</div></div>
+            <div class="summary-card"><div class="label">Capex cash outflow</div><div class="value" id="sumCapexCash">R 0</div></div>
+            <div class="summary-card"><div class="label">Opening working capital</div><div class="value" id="sumOpeningWorkingCapital">R 0</div></div>
+            <div class="summary-card"><div class="label">Contingency reserve</div><div class="value" id="sumContingency">R 0</div></div>
+            <div class="summary-card"><div class="label">Capital employed</div><div class="value" id="sumCapitalEmployed">R 0</div></div>
+            <div class="summary-card"><div class="label">WACC</div><div class="value" id="sumWacc">0.00%</div></div>
+          </div>
+
+          <div class="footer-note" id="capitalSummaryText"></div>
+          <div class="warning-note">
+            <strong>Funding checks</strong>
+            <ul class="funding-warning-list" id="fundingWarnings">
+              <li>No warnings yet.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -632,6 +722,9 @@
         { name: 'Telephone, postage and internet', monthly: 3500, increase: 5, startMonth: 1 },
         { name: 'Web hosting', monthly: 1200, increase: 5, startMonth: 1 },
         { name: 'Accounting and audit fees', monthly: 4000, increase: 6, startMonth: 1 }
+      ],
+      assetLines: [
+        { category: 'Computers and equipment', costExVat: 120000, usefulLifeYears: 5 }
       ],
       manualTables: {
         income: null,
@@ -771,6 +864,12 @@
         monthly: safeNum(line.monthly, 0, 100000000),
         increase: safeNum(line.increase, -100, 1000),
         startMonth: clamp(Math.round(safeNum(line.startMonth, 1, 60)), 1, 60)
+      }));
+
+      state.assetLines = (state.assetLines || []).map(line => ({
+        category: sanitizeText(line.category || 'Asset'),
+        costExVat: safeNum(line.costExVat, 0, 100000000),
+        usefulLifeYears: clamp(Math.round(safeNum(line.usefulLifeYears, 1, 50)), 1, 50)
       }));
     }
 
@@ -923,8 +1022,58 @@
       bindTableState('expense');
     }
 
+    function renderAssetTable() {
+      sanitizeState();
+      const tbody = q('assetTable').querySelector('tbody');
+      tbody.innerHTML = '';
+      const vatRegistered = q('vatRegistered').value === 'yes';
+      const vatRate = safeNum(q('vatRate').value, 0, 100) / 100;
+
+      state.assetLines.forEach((line, idx) => {
+        const tr = document.createElement('tr');
+
+        const c1 = document.createElement('td');
+        const category = createInput('text', line.category);
+        category.dataset.field = 'category';
+        c1.appendChild(category);
+
+        const c2 = document.createElement('td');
+        c2.className = 'right';
+        const costExVat = createInput('number', line.costExVat, '0.01', 0, 100000000);
+        costExVat.dataset.field = 'costExVat';
+        c2.appendChild(costExVat);
+
+        const c3 = document.createElement('td');
+        c3.className = 'right';
+        const vatDisplay = document.createElement('div');
+        vatDisplay.className = 'readonly-input';
+        vatDisplay.textContent = formatCurrency(vatRegistered ? line.costExVat * vatRate : 0);
+        c3.appendChild(vatDisplay);
+
+        const c4 = document.createElement('td');
+        c4.className = 'right';
+        const usefulLifeYears = createInput('number', line.usefulLifeYears, '1', 1, 50);
+        usefulLifeYears.dataset.field = 'usefulLifeYears';
+        c4.appendChild(usefulLifeYears);
+
+        const c5 = document.createElement('td');
+        c5.className = 'center';
+        c5.appendChild(createRemoveButton('asset', idx));
+
+        tr.append(c1, c2, c3, c4, c5);
+        tbody.appendChild(tr);
+      });
+
+      bindTableState('asset');
+    }
+
     function bindTableState(type) {
-      const tableId = type === 'revenue' ? 'revenueTable' : type === 'salary' ? 'salaryTable' : 'expenseTable';
+      const tableId =
+        type === 'revenue' ? 'revenueTable' :
+        type === 'salary' ? 'salaryTable' :
+        type === 'expense' ? 'expenseTable' :
+        'assetTable';
+
       const tbody = q(tableId).querySelector('tbody');
 
       tbody.querySelectorAll('tr').forEach((tr, idx) => {
@@ -970,7 +1119,18 @@
                     : safeNum(input.value, 0, 100000000);
             }
 
+            if (type === 'asset') {
+              const line = state.assetLines[idx];
+              const field = input.dataset.field;
+              line[field] = field === 'category'
+                ? sanitizeText(input.value)
+                : field === 'usefulLifeYears'
+                  ? clamp(Math.round(safeNum(input.value, 1, 50)), 1, 50)
+                  : safeNum(input.value, 0, 100000000);
+            }
+
             debouncedRenderStatements();
+            if (type === 'asset') renderAssetTable();
           });
         });
 
@@ -980,6 +1140,7 @@
           if (type === 'revenue') state.revenueLines.splice(i, 1);
           if (type === 'salary') state.salaryLines.splice(i, 1);
           if (type === 'expense') state.expenseLines.splice(i, 1);
+          if (type === 'asset') state.assetLines.splice(i, 1);
           renderAllTables();
         };
       });
@@ -990,15 +1151,95 @@
       return Math.pow(1 + pct / 100, 1 / 12) - 1;
     }
 
+    function getFundingContext(preview = false) {
+      sanitizeState();
+
+      const vatRegistered = q('vatRegistered').value === 'yes';
+      const vatRate = safeNum(q('vatRate').value, 0, 100) / 100;
+      const taxRate = safeNum(q('taxRate').value, 0, 100) / 100;
+
+      const shareholderCapital = safeNum(q('shareholderCapital').value, 0, 100000000);
+      const retainedEarnings = safeNum(q('retainedEarnings').value, 0, 100000000);
+      const grantFunding = safeNum(q('grantFunding').value, 0, 100000000);
+      const loanAmount = safeNum(q('loanAmount').value, 0, 100000000);
+      const startupCosts = safeNum(q('startupCosts').value, 0, 100000000);
+      const workingCapitalMonths = safeNum(q('workingCapitalMonths').value, 0, 24);
+      const contingencyPct = safeNum(q('contingencyPct').value, 0, 100) / 100;
+      const costOfEquity = safeNum(q('costOfEquity').value, 0, 100) / 100;
+      const openingCashOverride = safeNum(q('openingCash').value, 0, 100000000);
+      const compoundingFrequency = q('compoundingFrequency').value;
+      const annualRate = safeNum(q('interestRate').value, 0, 100) / 100;
+      const monthlyRate = compoundingFrequency === 'annual'
+        ? Math.pow(1 + annualRate, 1 / 12) - 1
+        : annualRate / 12;
+
+      const totalCapexExVat = state.assetLines.reduce((sum, line) => sum + safeNum(line.costExVat, 0, 100000000), 0);
+      const totalCapexVat = vatRegistered ? totalCapexExVat * vatRate : 0;
+      const totalCapexCash = totalCapexExVat + totalCapexVat;
+
+      const equityTotal = shareholderCapital + retainedEarnings + grantFunding;
+      const totalFunding = equityTotal + loanAmount;
+      const debtWeight = totalFunding > 0 ? loanAmount / totalFunding : 0;
+      const ownerEquityWeight = totalFunding > 0 ? (shareholderCapital + retainedEarnings) / totalFunding : 0;
+      const grantWeight = totalFunding > 0 ? grantFunding / totalFunding : 0;
+      const debtCostAfterTax = annualRate * (1 - taxRate);
+      const wacc = (ownerEquityWeight * costOfEquity) + (grantWeight * 0) + (debtWeight * debtCostAfterTax);
+
+      const monthlyPayrollBase = state.salaryLines.reduce((sum, line) => {
+        return sum + safeNum(line.people, 0, 1000) * safeNum(line.salary, 0, 100000000);
+      }, 0);
+
+      const monthlyOverheadBase = state.expenseLines.reduce((sum, line) => sum + safeNum(line.monthly, 0, 100000000), 0);
+      const openingWorkingCapital = (monthlyPayrollBase + monthlyOverheadBase) * workingCapitalMonths;
+      const contingencyReserve = (startupCosts + totalCapexCash + openingWorkingCapital) * contingencyPct;
+      const openingCashCalculated = totalFunding - startupCosts - totalCapexCash - openingWorkingCapital - contingencyReserve + openingCashOverride;
+      const capitalEmployed = totalCapexExVat + openingWorkingCapital;
+
+      return {
+        vatRegistered,
+        vatRate,
+        taxRate,
+        shareholderCapital,
+        retainedEarnings,
+        grantFunding,
+        loanAmount,
+        startupCosts,
+        workingCapitalMonths,
+        contingencyPct,
+        costOfEquity,
+        openingCashOverride,
+        compoundingFrequency,
+        annualRate,
+        monthlyRate,
+        totalCapexExVat,
+        totalCapexVat,
+        totalCapexCash,
+        equityTotal,
+        totalFunding,
+        debtWeight,
+        ownerEquityWeight,
+        grantWeight,
+        debtCostAfterTax,
+        wacc,
+        monthlyPayrollBase,
+        monthlyOverheadBase,
+        openingWorkingCapital,
+        contingencyReserve,
+        openingCashCalculated,
+        capitalEmployed
+      };
+    }
+
     function buildProjection() {
       sanitizeState();
 
       const months = getMonths();
       const labels = getLabels(months);
       const reportingView = q('reportingView').value;
-      const vatRegistered = q('vatRegistered').value === 'yes';
-      const taxRate = safeNum(q('taxRate').value, 0, 100) / 100;
-      const vatRate = safeNum(q('vatRate').value, 0, 100) / 100;
+      const funding = getFundingContext();
+      const vatRegistered = funding.vatRegistered;
+      const taxRate = funding.taxRate;
+      const vatRate = funding.vatRate;
       const creditDays = safeNum(q('creditDays').value, 0, 365);
       const inventoryDays = safeNum(q('inventoryDays').value, 0, 365);
       const supplierDays = safeNum(q('supplierDays').value, 0, 365);
@@ -1011,7 +1252,6 @@
       const overheads = Array(months).fill(0);
       const depreciation = Array(months).fill(0);
       const otherIncome = Array(months).fill(0);
-      const startupDeposits = safeNum(q('deposits').value, 0, 100000000);
 
       state.revenueLines.forEach(line => {
         const startIdx = Math.max(0, clamp(line.startMonth - 1, 0, months - 1));
@@ -1039,32 +1279,68 @@
         }
       });
 
+      state.assetLines.forEach(line => {
+        const monthlyDep = safeNum(line.costExVat, 0, 100000000) / (Math.max(1, safeNum(line.usefulLifeYears, 1, 50)) * 12);
+        for (let i = 0; i < months; i++) depreciation[i] += monthlyDep;
+      });
+
       for (let i = 0; i < months; i++) {
         otherIncome[i] = otherIncomeBase * Math.pow(1 + otherIncomeGrowth, i);
       }
 
-      const assetPurchase = safeNum(q('assetPurchase').value, 0, 100000000);
-      const assetLifeYears = Math.max(1, safeNum(q('assetLifeYears').value, 1, 50));
-      const monthlyDep = assetPurchase / (assetLifeYears * 12);
-      for (let i = 0; i < months; i++) depreciation[i] = monthlyDep;
-
-      const loanAmount = safeNum(q('loanAmount').value, 0, 100000000);
+      const loanAmount = funding.loanAmount;
       const loanTerm = Math.max(1, safeNum(q('loanTerm').value, 1, 600));
-      const annualRate = safeNum(q('interestRate').value, 0, 100) / 100;
-      const monthlyRate = annualRate / 12;
-      const monthlyRepayment = monthlyRate === 0
-        ? loanAmount / loanTerm
-        : loanAmount * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -loanTerm)));
+      const gracePeriod = clamp(Math.round(safeNum(q('gracePeriod').value, 0, 60)), 0, loanTerm - 1);
+      const repaymentType = q('repaymentType').value;
+      const monthlyRate = funding.monthlyRate;
 
       const interest = Array(months).fill(0);
       const principal = Array(months).fill(0);
       const loanBalance = Array(months).fill(0);
 
       let openingDebt = loanAmount;
+      let annuityRepayment = 0;
+      if (repaymentType === 'annuity') {
+        const amortMonths = Math.max(1, loanTerm - gracePeriod);
+        annuityRepayment = monthlyRate === 0
+          ? loanAmount / amortMonths
+          : loanAmount * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -amortMonths)));
+      }
+
       for (let i = 0; i < months; i++) {
-        const int = openingDebt > 0 ? openingDebt * monthlyRate : 0;
-        const pay = openingDebt > 0 ? Math.min(monthlyRepayment, openingDebt + int) : 0;
-        const princ = Math.max(0, pay - int);
+        let int = openingDebt > 0 ? openingDebt * monthlyRate : 0;
+        let princ = 0;
+
+        if (repaymentType === 'annuity') {
+          if (i < loanTerm) {
+            if (i < gracePeriod) {
+              princ = 0;
+            } else {
+              const pay = Math.min(annuityRepayment, openingDebt + int);
+              princ = Math.max(0, pay - int);
+            }
+          }
+        }
+
+        if (repaymentType === 'interest_only') {
+          if (i < loanTerm - 1) {
+            princ = 0;
+          } else if (i === loanTerm - 1) {
+            princ = openingDebt;
+          }
+        }
+
+        if (repaymentType === 'bullet') {
+          if (i < loanTerm - 1) {
+            openingDebt += int;
+            int = 0;
+            princ = 0;
+          } else if (i === loanTerm - 1) {
+            int = 0;
+            princ = openingDebt;
+          }
+        }
+
         const closingDebt = Math.max(0, openingDebt - princ);
         interest[i] = int;
         principal[i] = princ;
@@ -1093,10 +1369,10 @@
       const cfi = Array(months).fill(0);
       const cff = Array(months).fill(0);
 
-      const openingCash = safeNum(q('openingCash').value, 0, 100000000) + safeNum(q('equityAmount').value, 0, 100000000) + loanAmount - startupDeposits - assetPurchase;
+      const openingCash = funding.openingCashCalculated;
 
-      let prevAR = 0, prevInv = 0, prevAP = 0, prevCash = openingCash, prevRetained = 0;
-      let currentPPE = assetPurchase;
+      let prevAR = 0, prevInv = 0, prevAP = 0, prevCash = openingCash, prevRetained = funding.retainedEarnings;
+      let currentPPE = funding.totalCapexExVat;
       let vatLiabilityRunning = 0;
       let taxLiabilityRunning = 0;
 
@@ -1113,7 +1389,7 @@
         ap[i] = directCost[i] * (supplierDays / 30);
 
         const outputVAT = vatRegistered ? revenue[i] * vatRate : 0;
-        const inputVAT = vatRegistered ? (directCost[i] + overheads[i] + (i === 0 ? assetPurchase : 0)) * vatRate : 0;
+        const inputVAT = vatRegistered ? (directCost[i] + overheads[i] + (i === 0 ? funding.totalCapexExVat : 0)) * vatRate : 0;
         vatAccrued[i] = outputVAT - inputVAT;
         taxAccrued[i] = tax[i];
 
@@ -1138,7 +1414,7 @@
         const deltaAP = ap[i] - prevAP;
 
         cfo[i] = netProfit[i] + depreciation[i] - deltaAR - deltaInv + deltaAP - vatPaid[i] - taxPaid[i];
-        cfi[i] = i === 0 ? -assetPurchase : 0;
+        cfi[i] = i === 0 ? -funding.totalCapexCash : 0;
         cff[i] = -(principal[i]);
         cash[i] = prevCash + cfo[i] + cfi[i] + cff[i];
 
@@ -1184,13 +1460,32 @@
 
       const assets = labelsOut.map((_, i) => (seriesMap.cash[i] || 0) + (seriesMap.ar[i] || 0) + (seriesMap.inventory[i] || 0) + (seriesMap.ppe[i] || 0));
       const liabilities = labelsOut.map((_, i) => (seriesMap.ap[i] || 0) + Math.max(0, seriesMap.vatPayable[i] || 0) + (seriesMap.taxPayable[i] || 0) + (seriesMap.loanBalance[i] || 0));
-      const equity = labelsOut.map((_, i) => safeNum(q('equityAmount').value, 0, 100000000) + (seriesMap.retained[i] || 0));
+      const equity = labelsOut.map((_, i) => funding.shareholderCapital + funding.grantFunding + (seriesMap.retained[i] || 0));
 
       q('loanMonthlyRate').textContent = formatPct(monthlyRate * 100);
-      q('loanRepayment').textContent = formatCurrency(monthlyRepayment);
-      q('loanTotalRepayable').textContent = formatCurrency(monthlyRepayment * Math.min(months, loanTerm));
-      q('loanRemaining').textContent = formatCurrency(Math.max(0, loanAmount - startupDeposits - assetPurchase));
-      q('fundingSummaryText').textContent = `Opening capital equals equity + debt + manual opening cash less deposits and asset purchases. VAT is approximated on a two-month payment cycle and tax on six-month provisional settlement timing for planning use.`;
+      q('loanRepayment').textContent = formatCurrency(repaymentType === 'annuity' ? annuityRepayment : repaymentType === 'interest_only' ? loanAmount * monthlyRate : 0);
+      q('loanTotalRepayable').textContent = formatCurrency(
+        interest.reduce((a, b) => a + b, 0) + principal.reduce((a, b) => a + b, 0)
+      );
+      q('loanRemaining').textContent = formatCurrency(openingCash);
+      q('fundingSummaryText').textContent = `Opening cash is calculated from total funding less startup costs, capex cash outflow, opening working capital and contingency. WACC blends debt cost after tax, owner equity cost and zero-cost grant funding.`;
+
+      q('sumTotalFunding').textContent = formatCurrency(funding.totalFunding);
+      q('sumCapexCash').textContent = formatCurrency(funding.totalCapexCash);
+      q('sumOpeningWorkingCapital').textContent = formatCurrency(funding.openingWorkingCapital);
+      q('sumContingency').textContent = formatCurrency(funding.contingencyReserve);
+      q('sumCapitalEmployed').textContent = formatCurrency(funding.capitalEmployed);
+      q('sumWacc').textContent = formatPct(funding.wacc * 100);
+
+      const warnings = [];
+      if (openingCash < 0) warnings.push('Opening cash position is negative. Funding is insufficient for startup uses.');
+      if (funding.totalFunding > 0 && funding.loanAmount / funding.totalFunding > 0.70) warnings.push('Debt exceeds 70% of total funding. Capital structure may be too leveraged.');
+      if (fixedMonthlyCosts > 0 && funding.openingWorkingCapital < fixedMonthlyCosts) warnings.push('Opening working capital covers less than one month of fixed operating costs.');
+      const finalReturn = assets[assets.length - 1] > 0 ? (netProfit[netProfit.length - 1] / assets[assets.length - 1]) : 0;
+      if (funding.wacc > 0 && finalReturn > 0 && finalReturn < funding.wacc) warnings.push('Projected return on capital is below WACC in the final displayed period.');
+      const warningHtml = warnings.length ? warnings.map(x => `<li>${x}</li>`).join('') : '<li>No funding warnings triggered.</li>';
+      q('fundingWarnings').innerHTML = warningHtml;
+      q('capitalSummaryText').textContent = `Capital employed is shown as fixed assets plus opening working capital. Startup cash uses include startup costs, capex cash outflow and the contingency buffer.`;
 
       return {
         labels: labelsOut,
@@ -1332,7 +1627,6 @@
       const baseAR = getBaseRow('balance', 'Trade receivables')?.values || [];
       const baseInv = getBaseRow('balance', 'Inventory')?.values || [];
       const basePPE = getBaseRow('balance', 'Property, plant and equipment')?.values || [];
-      const baseLiabTotalNeg = getBaseRow('balance', 'Total liabilities')?.values || [];
       const baseTradePay = getBaseRow('balance', 'Trade payables')?.values || [];
       const baseVAT = getBaseRow('balance', 'VAT payable / (receivable)')?.values || [];
       const baseTax = getBaseRow('balance', 'Tax payable')?.values || [];
@@ -1647,6 +1941,7 @@
       renderRevenueTable();
       renderSalaryTable();
       renderExpenseTable();
+      renderAssetTable();
       renderStatements();
     }
 
@@ -1680,18 +1975,25 @@
           culture: q('culture').value
         },
         funding: {
-          equityAmount: q('equityAmount').value,
+          shareholderCapital: q('shareholderCapital').value,
+          retainedEarnings: q('retainedEarnings').value,
+          grantFunding: q('grantFunding').value,
+          costOfEquity: q('costOfEquity').value,
+          startupCosts: q('startupCosts').value,
+          workingCapitalMonths: q('workingCapitalMonths').value,
+          contingencyPct: q('contingencyPct').value,
+          openingCash: q('openingCash').value,
           loanAmount: q('loanAmount').value,
           loanTerm: q('loanTerm').value,
           interestRate: q('interestRate').value,
-          deposits: q('deposits').value,
-          assetPurchase: q('assetPurchase').value,
-          assetLifeYears: q('assetLifeYears').value,
-          openingCash: q('openingCash').value
+          gracePeriod: q('gracePeriod').value,
+          repaymentType: q('repaymentType').value,
+          compoundingFrequency: q('compoundingFrequency').value
         },
         revenueLines: state.revenueLines,
         salaryLines: state.salaryLines,
         expenseLines: state.expenseLines,
+        assetLines: state.assetLines,
         manualTables: state.manualTables
       };
     }
@@ -1707,6 +2009,13 @@
       validateLoadedData(data);
       Object.entries(data.setup || {}).forEach(([k, v]) => { if (q(k)) q(k).value = v; });
       Object.entries(data.funding || {}).forEach(([k, v]) => { if (q(k)) q(k).value = v; });
+
+      if (!data.funding && data.funding !== null) {
+        if (q('loanAmount') && data.funding?.loanAmount === undefined && data.funding === undefined) {
+          q('loanAmount').value = data.funding?.loanAmount ?? q('loanAmount').value;
+        }
+      }
+
       state.revenueLines = data.revenueLines || [];
       state.salaryLines = data.salaryLines || [];
       state.expenseLines = (data.expenseLines || []).map(x => ({
@@ -1715,12 +2024,28 @@
         increase: x.increase ?? 0,
         startMonth: x.startMonth ?? 1
       }));
+
+      if (Array.isArray(data.assetLines) && data.assetLines.length) {
+        state.assetLines = data.assetLines.map(x => ({
+          category: x.category ?? 'Asset',
+          costExVat: x.costExVat ?? 0,
+          usefulLifeYears: x.usefulLifeYears ?? 5
+        }));
+      } else if (data.funding && data.funding.assetPurchase) {
+        state.assetLines = [{
+          category: 'Imported asset',
+          costExVat: safeNum(data.funding.assetPurchase, 0, 100000000),
+          usefulLifeYears: clamp(Math.round(safeNum(data.funding.assetLifeYears, 1, 50)), 1, 50)
+        }];
+      }
+
       state.manualTables = data.manualTables || { income: null, cash: null, balance: null };
       state.baseTables = { income: null, cash: null, balance: null };
       sanitizeState();
       renderRevenueTable();
       renderSalaryTable();
       renderExpenseTable();
+      renderAssetTable();
       renderStatements();
     }
 
@@ -1933,6 +2258,10 @@
       ws = aoaToSheetWithFormatting(expenseRows, [30, 14, 12, 14], { headerRow: 2, titleRows: [0], subtitleRows: [1], labelCols: [0], totalRows: [expenseRows.length - 1], autofilterRef: 'A3:D' + expenseRows.length });
       XLSX.utils.book_append_sheet(wb, ws, 'Expenses');
 
+      const capexRows = buildInputSheetRows('Capital Expenditure', ['category','costExVat','usefulLifeYears'], state.assetLines, [1]);
+      ws = aoaToSheetWithFormatting(capexRows, [30, 16, 16], { headerRow: 2, titleRows: [0], subtitleRows: [1], labelCols: [0], totalRows: [capexRows.length - 1], autofilterRef: 'A3:C' + capexRows.length });
+      XLSX.utils.book_append_sheet(wb, ws, 'Capex');
+
       [
         ['Profit and Loss', state.manualTables.income],
         ['Cash Flow', state.manualTables.cash],
@@ -1984,6 +2313,11 @@
         renderExpenseTable();
       };
 
+      q('addAssetBtn').onclick = () => {
+        state.assetLines.push({ category: 'New asset', costExVat: 0, usefulLifeYears: 5 });
+        renderAssetTable();
+      };
+
       q('loadDefaultExpensesBtn').onclick = () => {
         defaultExpenses.forEach(name => {
           if (!state.expenseLines.some(x => x.name === name)) {
@@ -2028,13 +2362,18 @@
       });
 
       [
-        'businessName','businessInitials','industry','location','businessModel','offerType','entityType','currency','startMonth','periodMode','reportingView','taxRate','vatRate','vatRegistered','creditDays','inventoryDays','supplierDays','industryGrowth','targetGrowth','otherIncomeMonthly','otherIncomeGrowth','equityAmount','loanAmount','loanTerm','interestRate','deposits','assetPurchase','assetLifeYears','openingCash'
+        'businessName','businessInitials','industry','location','businessModel','offerType','entityType','currency','startMonth','periodMode','reportingView','taxRate','vatRate','vatRegistered','creditDays','inventoryDays','supplierDays','industryGrowth','targetGrowth','otherIncomeMonthly','otherIncomeGrowth',
+        'shareholderCapital','retainedEarnings','grantFunding','costOfEquity','startupCosts','workingCapitalMonths','contingencyPct','openingCash',
+        'loanAmount','loanTerm','interestRate','gracePeriod'
       ].forEach(id => {
         q(id).addEventListener('input', debouncedRenderStatements);
       });
 
-      ['currency','reportingView','vatRegistered','periodMode'].forEach(id => {
-        q(id).addEventListener('change', debouncedRenderStatements);
+      ['currency','reportingView','vatRegistered','periodMode','businessModel','offerType','entityType','repaymentType','compoundingFrequency'].forEach(id => {
+        q(id).addEventListener('change', () => {
+          if (id === 'vatRegistered') renderAssetTable();
+          debouncedRenderStatements();
+        });
       });
     }
 
